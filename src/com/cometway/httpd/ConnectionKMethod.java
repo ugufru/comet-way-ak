@@ -60,6 +60,7 @@ public class ConnectionKMethod extends KMethod
 		server.debug("++ Kmethods: "+server.counter);
 	}
 
+	@Deprecated
 	protected void finalize() throws Throwable
 	{
 		if(socket!=null) {

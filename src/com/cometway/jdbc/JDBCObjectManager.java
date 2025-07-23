@@ -298,6 +298,7 @@ public class JDBCObjectManager implements IObjectManager
 	 * Called by the garbage collector; close prepared statements.
 	 */
 
+	@Deprecated
 	protected void finalize() throws Throwable
 	{
 		try
@@ -311,8 +312,8 @@ public class JDBCObjectManager implements IObjectManager
 
 
 		// myThreadGroup.setDaemon(true);
-
-		myThreadGroup.destroy();
+		// Note: ThreadGroup.destroy() is deprecated and should not be used
+		// myThreadGroup.destroy();
 	}
 
 

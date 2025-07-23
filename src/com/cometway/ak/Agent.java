@@ -57,6 +57,7 @@ public abstract class Agent extends Props implements AgentInterface
 	* the Props methods to be accessible directly from other agent methods.
 	* @deprecated use the getProps method if you need a Props reference.
 	*/
+	@Deprecated
 	protected Props props;
 	/** This is a reference to the AgentController assigned to this agent. */
 	protected AgentControllerInterface agentController;

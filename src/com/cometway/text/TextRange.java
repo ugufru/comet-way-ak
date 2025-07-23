@@ -99,6 +99,7 @@ public class TextRange
 	}
 
 
+	@Deprecated
 	protected void finalize() throws Throwable
 	{
 		dispose();

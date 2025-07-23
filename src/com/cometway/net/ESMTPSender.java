@@ -1415,6 +1415,7 @@ public class ESMTPSender implements IMessageSender
       ;
    }
 
+   @Deprecated
    public void finalize()
    {
       if (isConnected)

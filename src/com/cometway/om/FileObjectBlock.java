@@ -728,6 +728,7 @@ public class FileObjectBlock
 	 * Overrides Object.finalize(). 
 	 * This method makes sure that the store is unreferenced.
 	 */
+	@Deprecated
 	protected void finalize() throws Throwable
  	{
 		super.finalize();

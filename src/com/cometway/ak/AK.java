@@ -47,6 +47,7 @@ public class AK
 	* This is the instance of the active Agent Kernel.
 	* @deprecated Use getAgentKernel and setAgentKernel methods instead.
 	*/
+	@Deprecated
 	public static AgentKernelInterface instance;
 
 	/**
