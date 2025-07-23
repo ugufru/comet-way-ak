@@ -4,12 +4,12 @@ package com.cometway.util;
 
 import com.cometway.util.*;
 import java.util.*;
-import org.apache.oro.text.perl.*;
+import java.util.regex.*;
 
 
 /**
  * This class provides static methods for quick and easy regular expression
- * matching and replacement. This class uses the org.apache.oro tools.
+ * matching and replacement. This class uses Java's built-in regex API.
  */
 public class jGrep
 {		// protected static Perl5Util perl;
@@ -85,48 +85,22 @@ public class jGrep
 	}
 
 
-	public static IntegerPair indecesOf(String pattern, String content, boolean ignoreCase, Perl5Util perl)
-	{		// if(perl==null) {
-
-
-		// perl = new Perl5Util();
-		// }
-
-		char    divChar = '/';
-
-		if (pattern.indexOf(divChar) != -1)
+	public static IntegerPair indecesOf(String pattern, String content, boolean ignoreCase, Pattern compiledPattern)
+	{
+		if (compiledPattern == null)
 		{
-			divChar = '#';
-
-			if (pattern.indexOf(divChar) != -1)
+			int flags = Pattern.MULTILINE;
+			if (ignoreCase)
 			{
-				divChar = '|';
-
-				if (pattern.indexOf(divChar) != -1)
-				{
-					divChar = ':';
-
-					if (pattern.indexOf(divChar) != -1)
-					{
-						divChar = '~';
-					}
-				}
+				flags |= Pattern.CASE_INSENSITIVE;
 			}
+			compiledPattern = Pattern.compile(pattern, flags);
 		}
 
-		if (ignoreCase)
+		Matcher matcher = compiledPattern.matcher(content);
+		if (matcher.find())
 		{
-			if (perl.match("m" + divChar + pattern + divChar + "im", content))
-			{
-				return (new IntegerPair(perl.beginOffset(0), perl.endOffset(0)));
-			}
-		}
-		else
-		{
-			if (perl.match("m" + divChar + pattern + divChar + "m", content))
-			{
-				return (new IntegerPair(perl.beginOffset(0), perl.endOffset(0)));
-			}
+			return (new IntegerPair(matcher.start(), matcher.end()));
 		}
 
 		return (null);
@@ -135,15 +109,21 @@ public class jGrep
 
 	public static IntegerPair indecesOf(String pattern, String content, boolean ignoreCase)
 	{
-		return (indecesOf(pattern, content, ignoreCase, new Perl5Util()));
+		int flags = Pattern.MULTILINE;
+		if (ignoreCase)
+		{
+			flags |= Pattern.CASE_INSENSITIVE;
+		}
+		Pattern compiledPattern = Pattern.compile(pattern, flags);
+		return (indecesOf(pattern, content, ignoreCase, compiledPattern));
 	}
 
 
-	public static Vector grepText(String pattern, String content, boolean ignoreCase, Perl5Util perl)
+	public static Vector grepText(String pattern, String content, boolean ignoreCase, Pattern compiledPattern)
 	{
 		Vector		matches = new Vector();
 		int		offset = 0;
-		IntegerPair     pair = jGrep.indecesOf(pattern, content, ignoreCase, perl);
+		IntegerPair     pair = jGrep.indecesOf(pattern, content, ignoreCase, compiledPattern);
 
 		while (pair != null)
 		{
@@ -152,7 +132,7 @@ public class jGrep
 			matches.addElement(new IntegerPair(pair.firstInt() + offset, pair.secondInt() + offset));
 
 			offset = offset + pair.secondInt();
-			pair = jGrep.indecesOf(pattern, content, ignoreCase, perl);
+			pair = jGrep.indecesOf(pattern, content, ignoreCase, compiledPattern);
 		}
 
 		return (matches);
@@ -161,48 +141,42 @@ public class jGrep
 
 	public static Vector grepText(String pattern, String content, boolean ignoreCase)
 	{
-		return (grepText(pattern, content, ignoreCase, new Perl5Util()));
+		int flags = Pattern.MULTILINE;
+		if (ignoreCase)
+		{
+			flags |= Pattern.CASE_INSENSITIVE;
+		}
+		Pattern compiledPattern = Pattern.compile(pattern, flags);
+		return (grepText(pattern, content, ignoreCase, compiledPattern));
 	}
 
 
-	public static String grepAndReplaceText(String pattern, String replacementString, String content, boolean ignoreCase, Perl5Util perl)
+	public static String grepAndReplaceText(String pattern, String replacementString, String content, boolean ignoreCase, Pattern compiledPattern)
 	{
-		char    divChar = '/';
-
-		if ((pattern.indexOf(divChar) != -1) || (replacementString.indexOf(divChar) != -1))
+		if (compiledPattern == null)
 		{
-			divChar = '#';
-
-			if ((pattern.indexOf(divChar) != -1) || (replacementString.indexOf(divChar) != -1))
+			int flags = Pattern.MULTILINE;
+			if (ignoreCase)
 			{
-				divChar = '|';
-
-				if ((pattern.indexOf(divChar) != -1) || (replacementString.indexOf(divChar) != -1))
-				{
-					divChar = ':';
-
-					if ((pattern.indexOf(divChar) != -1) || (replacementString.indexOf(divChar) != -1))
-					{
-						divChar = '~';
-					}
-				}
+				flags |= Pattern.CASE_INSENSITIVE;
 			}
+			compiledPattern = Pattern.compile(pattern, flags);
 		}
 
-		if (ignoreCase)
-		{
-			return (perl.substitute("s" + divChar + pattern + divChar + replacementString + divChar + "gi", content));
-		}
-		else
-		{
-			return (perl.substitute("s" + divChar + pattern + divChar + replacementString + divChar + "g", content));
-		}
+		Matcher matcher = compiledPattern.matcher(content);
+		return matcher.replaceAll(replacementString);
 	}
 
 
 	public static String grepAndReplaceText(String pattern, String replacementString, String content, boolean ignoreCase)
 	{
-		return (grepAndReplaceText(pattern, replacementString, content, ignoreCase, new Perl5Util()));
+		int flags = Pattern.MULTILINE;
+		if (ignoreCase)
+		{
+			flags |= Pattern.CASE_INSENSITIVE;
+		}
+		Pattern compiledPattern = Pattern.compile(pattern, flags);
+		return (grepAndReplaceText(pattern, replacementString, content, ignoreCase, compiledPattern));
 	}
 
 

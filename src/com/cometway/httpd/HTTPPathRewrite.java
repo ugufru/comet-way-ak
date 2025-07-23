@@ -9,7 +9,7 @@ import com.cometway.ak.*;
 import com.cometway.util.jGrep;
 import com.cometway.util.Pair;
 
-import org.apache.oro.text.perl.Perl5Util;
+import java.util.regex.Pattern;
 
 /**
  * This WebServerExtension reads in a file of match and replace pairs, separated
@@ -29,7 +29,6 @@ import org.apache.oro.text.perl.Perl5Util;
 public class HTTPPathRewrite extends WebServerExtension
 {
 	Vector pairs;
-	Perl5Util cache;
 
 	public void initProps()
 	{
@@ -43,14 +42,12 @@ public class HTTPPathRewrite extends WebServerExtension
 	public void start()
 	{
 		readMatchFile();
-		cache = new Perl5Util();
 
 		super.start();
 	}
 
 	public void stop()
 	{
-		cache = null;
 		pairs = null;
 	}
 
@@ -91,7 +88,7 @@ public class HTTPPathRewrite extends WebServerExtension
 			String match = (String)((Pair)pairs.elementAt(x)).first();
 			String replace = (String)((Pair)pairs.elementAt(x)).second();
 
-			newPath = jGrep.grepAndReplaceText(match,replace,path,false,cache);
+			newPath = jGrep.grepAndReplaceText(match,replace,path,false);
 			if(!path.equals(newPath)) {
 				request.setProperty("path",newPath);
 				break;

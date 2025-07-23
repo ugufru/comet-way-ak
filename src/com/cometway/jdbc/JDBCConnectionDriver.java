@@ -187,6 +187,11 @@ public class JDBCConnectionDriver implements Driver
         return (false);
     }
 
+    public java.util.logging.Logger getParentLogger() throws java.sql.SQLFeatureNotSupportedException
+    {
+        throw new java.sql.SQLFeatureNotSupportedException("getParentLogger not supported");
+    }
+
 
 	//--------------------------------------------------------------------------
 

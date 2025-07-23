@@ -942,11 +942,12 @@ public class JDBCConnection implements Connection
 	}
 
 
+*/
+
 	public boolean isWrapperFor(Class iface) throws SQLException
 	{
 		return connection.isWrapperFor(iface);
 	}
-
 
 	public Object unwrap(Class iface) throws SQLException
 	{
@@ -957,7 +958,92 @@ public class JDBCConnection implements Connection
 	{
 		return connection.getClientInfo(s);
 	}
-*/
+
+	// Additional methods required for newer JDBC versions
+	public int getNetworkTimeout() throws SQLException
+	{
+		return 0; // Default timeout
+	}
+
+	public void setNetworkTimeout(java.util.concurrent.Executor executor, int milliseconds) throws SQLException
+	{
+		// Not implemented in this wrapper
+	}
+
+	public void abort(java.util.concurrent.Executor executor) throws SQLException
+	{
+		if (connection != null) {
+			connection.close();
+		}
+	}
+
+	public String getSchema() throws SQLException
+	{
+		return connection.getSchema();
+	}
+
+	public void setSchema(String schema) throws SQLException
+	{
+		connection.setSchema(schema);
+	}
+
+	public java.sql.Struct createStruct(String typeName, Object[] attributes) throws SQLException
+	{
+		return connection.createStruct(typeName, attributes);
+	}
+
+	public java.sql.Array createArrayOf(String typeName, Object[] elements) throws SQLException
+	{
+		return connection.createArrayOf(typeName, elements);
+	}
+
+	public Properties getClientInfo() throws SQLException
+	{
+		return connection.getClientInfo();
+	}
+
+	public void setClientInfo(Properties properties)
+	{
+		try {
+			connection.setClientInfo(properties);
+		} catch (SQLException e) {
+			// Handle silently for compatibility
+		}
+	}
+
+	public void setClientInfo(String name, String value)
+	{
+		try {
+			connection.setClientInfo(name, value);
+		} catch (SQLException e) {
+			// Handle silently for compatibility
+		}
+	}
+
+	public boolean isValid(int timeout) throws SQLException
+	{
+		return connection.isValid(timeout);
+	}
+
+	public java.sql.SQLXML createSQLXML() throws SQLException
+	{
+		return connection.createSQLXML();
+	}
+
+	public java.sql.NClob createNClob() throws SQLException
+	{
+		return connection.createNClob();
+	}
+
+	public java.sql.Blob createBlob() throws SQLException
+	{
+		return connection.createBlob();
+	}
+
+	public java.sql.Clob createClob() throws SQLException
+	{
+		return connection.createClob();
+	}
 
 
 	//--------------------------------------------------------------------------
