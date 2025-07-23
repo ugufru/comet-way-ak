@@ -22,7 +22,7 @@ public class AK
 	public static final String PRODUCT_NAME = "Comet Way Agent Kernel";
 
 	/** This is the version of the Agent Kernel */
-	public static final String VERSION_STR = "3.0 Final 04-24-2008 - Patience.";
+	public static final String VERSION_STR = "3.4 Final 07-23-2025 - Java 21 Modernization.";
 
 	/** This is the proper name and version of the Agent Kernel. */
 	public static final String VERSION_INFO = PRODUCT_NAME + " " + VERSION_STR;

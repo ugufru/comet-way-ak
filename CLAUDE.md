@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-The Comet Way Agent Kernel (AK) is a mature Java framework for building agent-based applications. Version 3.0 implements a dynamic component software model for deploying "Agent Applications" - autonomous server applications, web services, email handlers, database interfaces, and GUI applications built from interchangeable agent components.
+The Comet Way Agent Kernel (AK) is a mature Java framework for building agent-based applications. Version 3.4 implements a dynamic component software model for deploying "Agent Applications" - autonomous server applications, web services, email handlers, database interfaces, and GUI applications built from interchangeable agent components.
 
 This codebase has been modernized from Java 1.4+ to **Java 21**, with Jakarta-ORO replaced by `java.util.regex` and JDBC interfaces updated for compatibility.
 

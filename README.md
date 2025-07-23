@@ -1,6 +1,6 @@
 # Comet Way Agent Kernel
 
-**Version 3.0 - Java 21 Edition**  
+**Version 3.4 - Java 21 Edition**  
 **Build 07-23-2025**
 
 ## Overview
@@ -33,9 +33,9 @@ We have overwhelmingly found that agent-based application design is an effective
 
 > **Note**: While the codebase may work with Java 8, it has not been tested and Java 11+ is strongly recommended for full compatibility with all modern JDBC features and performance optimizations.
 
-## Java 21 Modernization (Complete)
+## Version 3.4 - Java 21 Modernization (Complete)
 
-This version includes significant modernization improvements:
+This major release (following version 3.3 from 2011) includes comprehensive modernization improvements:
 
 - ✅ **Java 21 Support** - Upgraded from Java 1.4+ to Java 21 LTS
 - ✅ **Modern Regex** - Replaced deprecated Jakarta-ORO with java.util.regex
@@ -90,6 +90,16 @@ The comprehensive modernization effort included:
 - ✅ **Comprehensive warning reduction** (41 → 6 warnings)
 - ✅ **Removed deprecated ThreadGroup.destroy() usage**
 - ✅ **Enhanced build scripts for modern Java**
+
+## Version History
+
+| Version | Release Date | Java Version | Key Features |
+|---------|--------------|--------------|--------------|
+| **3.4** | **July 2025** | **Java 21** | **Complete Java 21 modernization, Jakarta-ORO removal, warning reduction** |
+| 3.3 | October 2011 | Java 1.4+ | Feature updates and bug fixes |
+| 3.0 | April 2008 | Java 1.4+ | Initial open source release |
+
+> **Version 3.4** represents a **14-year leap forward** from version 3.3, bringing the codebase from 2011-era Java 1.4+ to modern Java 21 standards.
 
 ## Architecture Overview
 
