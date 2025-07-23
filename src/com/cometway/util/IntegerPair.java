@@ -56,7 +56,7 @@ public class IntegerPair extends Pair
 
 	public void setFirst(int i)
 	{
-		setFirst(new Integer(i));
+		setFirst(Integer.valueOf(i));
 	}
 
 
@@ -67,7 +67,7 @@ public class IntegerPair extends Pair
 
 	public void setSecond(int i)
 	{
-		setSecond(new Integer(i));
+		setSecond(Integer.valueOf(i));
 	}
 
 

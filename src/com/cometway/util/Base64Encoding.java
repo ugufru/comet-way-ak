@@ -187,7 +187,7 @@ public class Base64Encoding
 					for(int x=0;x<binChar.length;x++) {
 						if(bufferIndex>=buffer.length) {
 							byte decodeChar = (byte)(binToInt(buffer));
-							rval.addElement(new Byte(decodeChar));
+							rval.addElement(Byte.valueOf(decodeChar));
 							bufferIndex = 0;
 							buffer = new boolean[8];
 							buffer[bufferIndex++] = binChar[x];
@@ -205,14 +205,14 @@ public class Base64Encoding
 						}
 						byte decodeChar = (byte)binToInt(buffer);
 						if((int)decodeChar!=0) {
-							rval.addElement(new Byte(decodeChar));
+							rval.addElement(Byte.valueOf(decodeChar));
 						}
 					}
 				}
 
 				if((bufferIndex==buffer.length) && z==in.length()-1) {
 				    byte decodeChar = (byte)(binToInt(buffer));
-				    rval.addElement(new Byte(decodeChar));
+				    rval.addElement(Byte.valueOf(decodeChar));
 				}				    
 			}
 		}

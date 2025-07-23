@@ -118,7 +118,7 @@ public class CookiePropsContainer extends AbstractPropsContainer
 
 			if (name.equals("secure"))
 			{
-				value = new Boolean(lowerCookie.trim().endsWith("secure"));
+				value = Boolean.valueOf(lowerCookie.trim().endsWith("secure"));
 			}
 			else
 			{

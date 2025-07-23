@@ -208,7 +208,7 @@ public class jGrep
 		{
 			count++;
 
-			Integer temp = new Integer(index);
+			Integer temp = Integer.valueOf(index);
 
 			i.addElement(temp);
 

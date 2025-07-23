@@ -833,7 +833,7 @@ public class Props
 				{
 					if ((value instanceof Boolean) == false)
 					{
-						value = new Boolean(getBoolean(key));
+						value = Boolean.valueOf(getBoolean(key));
 					}
 				}
 
@@ -843,7 +843,7 @@ public class Props
 				{
 					if ((value instanceof Integer) == false)
 					{
-						value = new Integer(getInteger(key));
+						value = Integer.valueOf(getInteger(key));
 					}
 				}
 
@@ -1493,7 +1493,7 @@ public class Props
 
 	public void setBoolean(String key, boolean value)
 	{
-		container.setProperty(key, new Boolean(value));
+		container.setProperty(key, Boolean.valueOf(value));
 		notifyPropsChanged(key);
 	}
 
@@ -1506,7 +1506,7 @@ public class Props
 
 	public void setCharacter(String key, char value)
 	{
-		container.setProperty(key, new Character(value));
+		container.setProperty(key, Character.valueOf(value));
 		notifyPropsChanged(key);
 	}
 
@@ -1534,7 +1534,7 @@ public class Props
 
 	public void setDouble(String key, double value)
 	{
-		container.setProperty(key, new Double(value));
+		container.setProperty(key, Double.valueOf(value));
 		notifyPropsChanged(key);
 	}
 
@@ -1547,7 +1547,7 @@ public class Props
 
 	public void setFloat(String key, float value)
 	{
-		container.setProperty(key, new Float(value));
+		container.setProperty(key, Float.valueOf(value));
 		notifyPropsChanged(key);
 	}
 
@@ -1560,7 +1560,7 @@ public class Props
 
 	public void setInteger(String key, int value)
 	{
-		container.setProperty(key, new Integer(value));
+		container.setProperty(key, Integer.valueOf(value));
 		notifyPropsChanged(key);
 	}
 
@@ -1573,7 +1573,7 @@ public class Props
 
 	public void setLong(String key, long value)
 	{
-		container.setProperty(key, new Long(value));
+		container.setProperty(key, Long.valueOf(value));
 		notifyPropsChanged(key);
 	}
 

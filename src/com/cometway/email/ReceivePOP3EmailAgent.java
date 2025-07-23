@@ -426,7 +426,7 @@ public class ReceivePOP3EmailAgent extends ScheduledAgent
 
 		for (int idx = 1; idx <= num_messages; idx++)
 		{
-			v.addElement(new Pair(new Integer(idx), getMessage(idx)));
+			v.addElement(new Pair(Integer.valueOf(idx), getMessage(idx)));
 		}
 
 		return v;
@@ -452,7 +452,7 @@ public class ReceivePOP3EmailAgent extends ScheduledAgent
 
 		for (int idx = start; idx <= num_messages; idx++)
 		{
-			v.addElement(new Pair(new Integer(idx), getMessage(idx)));
+			v.addElement(new Pair(Integer.valueOf(idx), getMessage(idx)));
 		}
 
 		return v;

@@ -116,11 +116,11 @@ public class AgentTableModel extends AbstractTableModel
 		switch (col)
 		{
 			case 0:
-				value = new Boolean(p.getBoolean("startup"));
+				value = Boolean.valueOf(p.getBoolean("startup"));
 			break;
 
 			case 1:
-				value = new Integer(p.getInteger("agent_id"));
+				value = Integer.valueOf(p.getInteger("agent_id"));
 			break;
 
 			case 2:
@@ -136,15 +136,15 @@ public class AgentTableModel extends AbstractTableModel
 			break;
 
 			case 5:
-				value = new Boolean(p.getBoolean("hide_println"));
+				value = Boolean.valueOf(p.getBoolean("hide_println"));
 			break;
 
 			case 6:
-				value = new Boolean(p.getBoolean("hide_debug"));
+				value = Boolean.valueOf(p.getBoolean("hide_debug"));
 			break;
 
 			case 7:
-				value = new Boolean(p.getBoolean("hide_warning"));
+				value = Boolean.valueOf(p.getBoolean("hide_warning"));
 			break;
 		}
 

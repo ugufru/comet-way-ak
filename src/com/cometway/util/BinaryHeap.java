@@ -48,7 +48,7 @@ public class BinaryHeap implements IHeap
 		while ((index > 0) && parent.greaterThan(newItem))
 		{
 			indexMap.remove(parent);
-			indexMap.put(parent, new Integer(index));
+			indexMap.put(parent, Integer.valueOf(index));
 			heap.setElementAt(parent, index);
 
 			index = parentIndex;
@@ -57,7 +57,7 @@ public class BinaryHeap implements IHeap
 		}		// JUST TO BE SURE...
 
 		indexMap.remove(newItem);
-		indexMap.put(newItem, new Integer(index));
+		indexMap.put(newItem, Integer.valueOf(index));
 		heap.setElementAt(newItem, index);
 
 		if (indexMap.size() != heap.size())
@@ -188,7 +188,7 @@ public class BinaryHeap implements IHeap
 		else
 		{
 			indexMap.remove(heap.elementAt(highest));
-			indexMap.put(heap.elementAt(highest), new Integer(0));
+			indexMap.put(heap.elementAt(highest), Integer.valueOf(0));
 			heap.setElementAt(heap.elementAt(highest), 0);
 			heap.removeElementAt(highest);
 			heapify(0);
@@ -276,7 +276,7 @@ public class BinaryHeap implements IHeap
 				IHeapItem       temp = (IHeapItem) heap.elementAt(index);
 
 				indexMap.remove(heap.elementAt(smallestIndex));
-				indexMap.put(heap.elementAt(smallestIndex), new Integer(index));
+				indexMap.put(heap.elementAt(smallestIndex), Integer.valueOf(index));
 				heap.setElementAt(heap.elementAt(smallestIndex), index); /* this put is unnecessary because upon recursing, if this element
 				 *  still invalidates the heap property of this heap, it will be
 				 *  moved again.  so long as a put is done on the map at the base
@@ -291,7 +291,7 @@ public class BinaryHeap implements IHeap
 				// times (this is one of the base cases)
 
 				indexMap.remove(heap.elementAt(index));
-				indexMap.put(heap.elementAt(index), new Integer(index));
+				indexMap.put(heap.elementAt(index), Integer.valueOf(index));
 			}
 		}
 

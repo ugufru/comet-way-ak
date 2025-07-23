@@ -90,15 +90,15 @@ public class VectorPropsContainer extends AbstractPropsContainer
 		}
 		else if (key.equals("size"))
 		{
-			o = new Integer(v.size());
+			o = Integer.valueOf(v.size());
 		}
 		else if (key.equals("isEmpty"))
 		{
-			o = new Boolean(v.isEmpty());
+			o = Boolean.valueOf(v.isEmpty());
 		}
 		else if (key.equals("capacity"))
 		{
-			o = new Integer(v.capacity());
+			o = Integer.valueOf(v.capacity());
 		}
 		else if (key.equals("elements"))
 		{
