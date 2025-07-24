@@ -360,12 +360,12 @@ public class PropsSchema
 
 					else if (type.equals("integer"))
 					{
-						o = new Integer(fromProps.getInteger(key));
+						o = Integer.valueOf(fromProps.getInteger(key));
 					}
 
 					else if (type.equals("boolean"))
 					{
-						o = new Boolean(fromProps.getBoolean(key));
+						o = Boolean.valueOf(fromProps.getBoolean(key));
 					}
 					
 					else if (type.equals("file"))

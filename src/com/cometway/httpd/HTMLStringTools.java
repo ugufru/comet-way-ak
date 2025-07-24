@@ -63,14 +63,14 @@ public class HTMLStringTools
 	/**
 	 * This method extracts the first img tag that is in the data
 	 */
-	public static String extractIMGTag(String data, org.apache.oro.text.perl.Perl5Util perl)
+	public static String extractIMGTag(String data, java.util.regex.Pattern compiledPattern)
 	{
 		IntegerPair p = null;
-		if(perl == null) {
+		if(compiledPattern == null) {
 			p = jGrep.indecesOf("<[\\s]*img[^>]*>",data,true);
 		}
 		else {
-			p = jGrep.indecesOf("<[\\s]*img[^>]*>",data,true,perl);
+			p = jGrep.indecesOf("<[\\s]*img[^>]*>",data,true,compiledPattern);
 		}
 
 		if(p==null) {
@@ -101,13 +101,13 @@ public class HTMLStringTools
 	/**
 	 * This method removes all the HTML tags in the data
 	 */
-	public static String removeHTMLTags(String text, org.apache.oro.text.perl.Perl5Util perl)
+	public static String removeHTMLTags(String text, java.util.regex.Pattern compiledPattern)
 	{
-		if(perl == null) {
+		if(compiledPattern == null) {
 			return (jGrep.grepAndReplaceText("<[A-Za-z\\s]*[^>]*>","",text,true));
 		}
 		else {
-			return (jGrep.grepAndReplaceText("<[A-Za-z\\s]*[^>]*>","",text,true,perl));
+			return (jGrep.grepAndReplaceText("<[A-Za-z\\s]*[^>]*>","",text,true,compiledPattern));
 		}
 	}
 
@@ -130,12 +130,12 @@ public class HTMLStringTools
 	/** 
 	 * This utility method removes form tags.
 	 */
-	public static String removeFormTags(String text, org.apache.oro.text.perl.Perl5Util perl)
+	public static String removeFormTags(String text, java.util.regex.Pattern compiledPattern)
 	{
-		String rval = jGrep.grepAndReplaceText("</*input[^>]*>","",text,true,perl);
-		rval = jGrep.grepAndReplaceText("</*select[^>]*>","",rval,true,perl);
-		rval = jGrep.grepAndReplaceText("</*option[^>]*>","",rval,true,perl);
-		rval = jGrep.grepAndReplaceText("</*form[^>]*>","<BR>",rval,true,perl);
+		String rval = jGrep.grepAndReplaceText("</*input[^>]*>","",text,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*select[^>]*>","",rval,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*option[^>]*>","",rval,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*form[^>]*>","<BR>",rval,true,compiledPattern);
 
 		return (rval);
 
@@ -157,11 +157,11 @@ public class HTMLStringTools
 	/** 
 	 * This utility method removes table tags.
 	 */
-	public static String removeTableTags(String text, org.apache.oro.text.perl.Perl5Util perl)
+	public static String removeTableTags(String text, java.util.regex.Pattern compiledPattern)
 	{
-		String rval = jGrep.grepAndReplaceText("</*table[^>]*>","<BR>",text,true,perl);
-		rval = jGrep.grepAndReplaceText("</*t[drhc][^>]*>","<BR>",rval,true,perl);
-		rval = jGrep.grepAndReplaceText("</*span[^>]*>","",rval,true,perl);
+		String rval = jGrep.grepAndReplaceText("</*table[^>]*>","<BR>",text,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*t[drhc][^>]*>","<BR>",rval,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*span[^>]*>","",rval,true,compiledPattern);
 
 		return (rval);
 	}
@@ -178,9 +178,9 @@ public class HTMLStringTools
 	 * This utility method removes horizontal rule tags.
 	 */
 
-	public static String removeHRTags(String text, org.apache.oro.text.perl.Perl5Util perl)
+	public static String removeHRTags(String text, java.util.regex.Pattern compiledPattern)
 	{
-		return (jGrep.grepAndReplaceText("<hr[^>]*>","<BR>",text,true,perl));
+		return (jGrep.grepAndReplaceText("<hr[^>]*>","<BR>",text,true,compiledPattern));
 	}
 
 	/** 
@@ -199,11 +199,11 @@ public class HTMLStringTools
 	 * This utility method removes list tags.
 	 */
 
-	public static String removeListTags(String text, org.apache.oro.text.perl.Perl5Util perl)
+	public static String removeListTags(String text, java.util.regex.Pattern compiledPattern)
 	{
-		String rval = jGrep.grepAndReplaceText("</*[dou]l[^>]*>","<BR>",text,true,perl);
-		rval = jGrep.grepAndReplaceText("</*li[^>]*>","<BR>",rval,true,perl);
-		rval = jGrep.grepAndReplaceText("</*d[dt][^>]*>","<BR>",rval,true,perl);
+		String rval = jGrep.grepAndReplaceText("</*[dou]l[^>]*>","<BR>",text,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*li[^>]*>","<BR>",rval,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*d[dt][^>]*>","<BR>",rval,true,compiledPattern);
 
 		return (rval);
 	}

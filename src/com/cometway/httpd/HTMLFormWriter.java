@@ -56,7 +56,7 @@ public class HTMLFormWriter
 	
 	public void print(int i) throws IOException
 	{
-		print((new Integer(i)).toString());
+		print(Integer.toString(i));
 	}
 
 
@@ -83,7 +83,7 @@ public class HTMLFormWriter
 
 	public void println(int i) throws IOException
 	{
-		println((new Integer(i)).toString());
+		println(Integer.toString(i));
 	}
 
 

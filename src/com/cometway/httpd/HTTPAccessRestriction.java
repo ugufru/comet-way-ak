@@ -5,8 +5,7 @@ import com.cometway.util.StringTools;
 import com.cometway.util.jGrep;
 import com.cometway.util.Pair;
 
-import org.apache.oro.text.perl.Perl5Util;
-import org.apache.oro.text.PatternCacheFIFO;
+import java.util.regex.Pattern;
 
 
 /**
@@ -28,7 +27,7 @@ import org.apache.oro.text.PatternCacheFIFO;
  */
 public class HTTPAccessRestriction extends WebServerExtension
 {
-	Perl5Util perl;
+	// No longer needed - Pattern compilation is done on demand
 	String[] paths;
 	String[] headers;
 	String[] ips;
@@ -128,8 +127,7 @@ public class HTTPAccessRestriction extends WebServerExtension
 			error("Unknown 'default_behavior' '"+getString("default_behavior")+"', aborting");
 			return;
 		}
-		// we have a fixed number of patters, so only cache what we need
-		perl = new Perl5Util(new PatternCacheFIFO(paths.length+headers.length));
+		// Pattern compilation is now done on demand using java.util.regex
 
 		if(tmp_properties!=null) {
 			properties = new Pair[tmp_properties.length];
@@ -162,7 +160,7 @@ public class HTTPAccessRestriction extends WebServerExtension
 			String ip = request.getString("request_remote_addr");
 			
 			for(int x=0;x<paths.length;x++) {
-				if(jGrep.indecesOf(paths[x],path,false,perl)!=null) {
+				if(jGrep.indecesOf(paths[x],path,false)!=null) {
 					match = true;
 					break;
 					}
@@ -170,7 +168,7 @@ public class HTTPAccessRestriction extends WebServerExtension
 			
 			if(!match) {
 				for(int x=0;x<headers.length;x++) {
-					if(jGrep.indecesOf(headers[x],header,false,perl)!=null) {
+					if(jGrep.indecesOf(headers[x],header,false)!=null) {
 						match = true;
 						break;
 					}

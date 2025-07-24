@@ -965,6 +965,34 @@ public class JDBCConnection implements Connection
 	}
 /* end JDK 1.6 added code */
 
+	/* Java 21 required methods */
+	public int getNetworkTimeout() throws SQLException
+	{
+		return connection.getNetworkTimeout();
+	}
+
+	public void setNetworkTimeout(java.util.concurrent.Executor executor, int milliseconds) throws SQLException
+	{
+		connection.setNetworkTimeout(executor, milliseconds);
+	}
+
+	public void abort(java.util.concurrent.Executor executor) throws SQLException
+	{
+		connection.abort(executor);
+	}
+
+	public String getSchema() throws SQLException
+	{
+		return connection.getSchema();
+	}
+
+	public void setSchema(String schema) throws SQLException
+	{
+		connection.setSchema(schema);
+	}
+
+/* end Java 21 added code */
+
 	//--------------------------------------------------------------------------
 	// Inner classes start here.
 	//--------------------------------------------------------------------------

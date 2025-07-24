@@ -24,10 +24,7 @@ echo Creating %AK_HOME%\temp_classes directory
 cd %AK_HOME%
 mkdir temp_classes
 
-echo Expanding %AK_HOME%\import\jakarta-oro-2.0.7\jakarta-oro-2.0.7.jar...
-cd %AK_HOME%\temp_classes
-%JAR% -xf %AK_HOME%\import\jakarta-oro-2.0.7\jakarta-oro-2.0.7.jar
-del /s /q META-INF
+REM Jakarta-ORO no longer needed - using native java.util.regex
 
 echo Compiling Comet Way Agents in %AK_HOME%\src\com\cometway
 cd %AK_HOME%\src\

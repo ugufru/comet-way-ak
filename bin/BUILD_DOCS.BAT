@@ -7,7 +7,7 @@ set JAVA_HOME=C:\j2sdk
 set AK_HOME=C:\projects\ak
 
 set CLASSPATH=%AK_HOME%\ak.jar
-set SOURCEPATH=%AK_HOME%\src;import\jakarta-oro-2.0.7\src\java
+set SOURCEPATH=%AK_HOME%\src
 set JDOC=%JAVA_HOME%\bin\javadoc -classpath %CLASSPATH% -sourcepath %SOURCEPATH% -d %AK_HOME%\javadocs
 
 
@@ -17,5 +17,5 @@ rmdir /s /q javadocs
 mkdir javadocs
 
 echo Compiling javadocs to %AK_HOME%\javadocs
-%JDOC% com.cometway.ak com.cometway.email com.cometway.httpd com.cometway.io com.cometway.jdbc com.cometway.net com.cometway.om com.cometway.props com.cometway.states com.cometway.swing com.cometway.text com.cometway.tools com.cometway.util com.cometway.xml org.apache.oro.io org.apache.oro.text org.apache.oro.text.awk org.apache.oro.text.perl org.apache.oro.text.regex org.apache.oro.util
+%JDOC% com.cometway.ak com.cometway.email com.cometway.httpd com.cometway.io com.cometway.jdbc com.cometway.net com.cometway.om com.cometway.props com.cometway.states com.cometway.swing com.cometway.text com.cometway.tools com.cometway.util com.cometway.xml
 
