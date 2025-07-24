@@ -1,0 +1,50 @@
+<?xml version="1.0">
+<props_list>
+	<props>
+		<agent_id>100</agent_id>
+		<classname>com.cometway.ak.ServiceManager</classname>
+		<hide_debug>true</hide_debug>
+		<name>ServiceManager</name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>101</agent_id>
+		<classname>com.cometway.ak.Scheduler</classname>
+		<name>Scheduler</name>
+		<service_name>scheduler</service_name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>102</agent_id>
+		<classname>com.cometway.om.ObjectManager</classname>
+		<name>ObjectManager</name>
+		<service_name>object_manager</service_name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>103</agent_id>
+		<classname>com.cometway.om.SessionManager</classname>
+		<name>SessionManager</name>
+		<om_service_name>object_manager</om_service_name>
+		<service_name>session_manager</service_name>
+		<session_type>session</session_type>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>104</agent_id>
+		<classname>com.cometway.om.SessionReaper</classname>
+		<name>SessionReaper</name>
+		<om_service_name>object_manager</om_service_name>
+		<schedule>between 0:0:0-23:59:59 every 30s</schedule>
+		<session_timeout_ms>30000</session_timeout_ms>
+		<session_type>session</session_type>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>500</agent_id>
+		<classname>SessionTest</classname>
+		<name>SessionTest</name>
+		<schedule>between 0:0:0-23:59:59 every 2s</schedule>
+		<startup>true</startup>
+	</props>
+</props_list>

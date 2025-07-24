@@ -78,7 +78,7 @@ public class Message extends Props implements IMessage, Serializable
 	/**
 	* Given a key, method returns the value of the header referenced by key if any
 	* @param key the header name to be extracted
-	* @returns the header text associated with key, if any
+	* @return the header text associated with key, if any
 	*/
 
 	public String getHeaderInfo(String key)
@@ -96,7 +96,7 @@ public class Message extends Props implements IMessage, Serializable
 
 	/**
 	* Method yields an Enumeration of header keys for this Message
-	* @returns an Enumeration of header keys
+	* @return an Enumeration of header keys
 	*/
 
 	public Enumeration getHeaders()
@@ -122,7 +122,7 @@ public class Message extends Props implements IMessage, Serializable
 
 	/**
 	* getMessage returns the message body of this Message
-	* @returns the message body of this Message
+	* @return the message body of this Message
 	*/
 
 

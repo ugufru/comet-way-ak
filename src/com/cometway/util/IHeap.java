@@ -13,7 +13,7 @@ public interface IHeap
 	/**
 	* Adds a IHeapItem to this heap.
 	*
-	* @returns true if the insert() resulted in a new minimum heap element
+	* @return true if the insert() resulted in a new minimum heap element
 	*/
 
 	public boolean insert(IHeapItem newItem);
@@ -22,7 +22,7 @@ public interface IHeap
 	/**
 	 * Deletes a specific heap item from this heap
 	 *
-	 * @returns true if the delete() resulted in a new minimum heap element
+	 * @return true if the delete() resulted in a new minimum heap element
 	 */
 
 	public boolean delete(IHeapItem deleteItem);
@@ -31,7 +31,7 @@ public interface IHeap
 	/**
 	 * Method returns the minimum IHeapItem in this heap
 	 *
-	 *  @returns the minimum IHeapItem in this heap
+	 *  @return the minimum IHeapItem in this heap
 	 */
 
 	public IHeapItem findMin();
@@ -40,7 +40,7 @@ public interface IHeap
 	/**
 	 * Removes and returns the minimum IHeapItem in this heap
 	 *
-	 *  @returns the minimum IHeapItem in this heap
+	 *  @return the minimum IHeapItem in this heap
 	 */
 
 	public IHeapItem deleteMin();
@@ -50,7 +50,7 @@ public interface IHeap
 	* Method returns true if this heap contains no elements and false
 	*   otherwise
 	*
-	*  @returns true if this heap contains no elements and false
+	*  @return true if this heap contains no elements and false
 	*   otherwise
 	*/
 

@@ -10,7 +10,7 @@ import com.cometway.util.jGrep;
 import com.cometway.util.Pair;
 import com.cometway.util.IntegerPair;
 
-import org.apache.oro.text.perl.Perl5Util;
+import java.util.regex.Pattern;
 
 /**
  * This WebServerExtension reads in a file of patterns and properties pairs, separated
@@ -32,7 +32,7 @@ import org.apache.oro.text.perl.Perl5Util;
 public class HTTPSetProperty extends WebServerExtension
 {
 	Vector pairs;
-	Perl5Util cache;
+	// No longer needed - Pattern compilation is done on demand
 
 	public void initProps()
 	{
@@ -46,7 +46,6 @@ public class HTTPSetProperty extends WebServerExtension
 	public void start()
 	{
 		readMatchFile();
-		cache = new Perl5Util();
 
 		super.start();
 	}
@@ -54,7 +53,6 @@ public class HTTPSetProperty extends WebServerExtension
 	public void stop()
 	{
 		pairs = null;
-		cache = null;
 	}
 
 	public void readMatchFile()
@@ -98,7 +96,7 @@ public class HTTPSetProperty extends WebServerExtension
 			String match = (String)((Pair)pairs.elementAt(x)).first();
 			Pair prop = (Pair)((Pair)pairs.elementAt(x)).second();
 
-			IntegerPair p = (IntegerPair)jGrep.indecesOf(match,header,false,cache);
+			IntegerPair p = (IntegerPair)jGrep.indecesOf(match,header,false);
 			if(p!=null) {
 				if(prop.second().equals("$MATCH")) {
 					String value = header.substring(p.firstInt(),p.secondInt());

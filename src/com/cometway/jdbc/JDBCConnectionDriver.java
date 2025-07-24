@@ -179,7 +179,7 @@ public class JDBCConnectionDriver implements Driver
 
 	/**
 	* This driver is not JDBC Compliant.
-	* @returns false;
+	* @return false;
 	*/
 
     public boolean jdbcCompliant()
@@ -187,6 +187,14 @@ public class JDBCConnectionDriver implements Driver
         return (false);
     }
 
+	/**
+	* Returns the parent Logger of all the Loggers used by this driver. For Java 7+ compatibility.
+	* @return parent Logger
+	*/
+	public java.util.logging.Logger getParentLogger() throws java.sql.SQLFeatureNotSupportedException
+	{
+		throw new java.sql.SQLFeatureNotSupportedException("getParentLogger not supported");
+	}
 
 	//--------------------------------------------------------------------------
 

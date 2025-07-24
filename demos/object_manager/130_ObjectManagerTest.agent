@@ -1,0 +1,4 @@
+agent_id=130
+classname=ObjectManagerTest
+iterations=10
+name=ObjectManagerTest

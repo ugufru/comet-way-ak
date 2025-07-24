@@ -1,0 +1,509 @@
+
+<HTML>
+<HEAD>
+<TITLE>Catalog of Agent Kernel Agents</TITLE>
+<STYLE>
+	A:link {text-decoration: none; font-weight: bold }
+	A:visited {text-decoration: none; font-weight: bold }
+	A:hover {text-decoration: underline; font-weight: bold }
+	H2, H3, H4, H5 { font-family: helvetica }
+	IMG { border: 0 }
+	TT, PRE { font-family: monaco,lucida console,courier }
+	UL { list-style-type: square }
+</STYLE>
+</HEAD>
+<BODY BGCOLOR='#ffffff' LINK='#003399' VLINK='#003399' ALINK='#ff0000'>
+
+<P ALIGN='right'><A href="../README.html">Contents</A></P>
+
+<H2>
+Catalog of Agents Available for the Comet Way Agent Kernel
+</H2>
+
+<BLOCKQUOTE>
+
+<A NAME='KernelAgents'><H3>Kernel Agents</H3></A>
+
+<BLOCKQUOTE>
+	Agent programming is made possible by the Kernel Agents, which are responsible
+	for many of the critical low-level agent operations. The most important agent
+	is the Agent Kernel itself which is responsible for creating, starting, stopping,
+	and destroying all agents. The Agent Kernel's first responsibility is creating
+	and starting the Startup Agent, which loads and starts all the other agents. You
+	will note that these Kernel Agents play a fundamental role in supporting both the
+	<A href="#WebAgents">Web</A> and <A href="#EmailAgents">Email</A> agents,
+	which are described in later sections.
+
+	<H5 ALIGN='center'>
+		<IMG src="kernel_agents.jpeg"><BR>
+		Kernel Agents and Their Relationships
+	</H5>
+
+	This section briefly describes the role of each of the Kernel Agents:
+	<P>
+
+	<H4>Agent</H4>
+	<BLOCKQUOTE>
+		All agents implement the Agent model and are capable of using their
+		own properties and state information to provide	appropriate functionality.
+		Agents provide methods that are critical to their life-cycle and operation. By default. each agent possess the following properties:
+		<UL>
+		<LI>name - the agent's internal name to be displayed in agent output (default: same as class name) 
+		<LI>id - the agent's id (default: assigned by the agent kernel) 
+		<LI>hide_println - disables println output if set to true (default: false) 
+		<LI>hide_debug - disables debug output if set to true (default: false) 
+		<LI>hide_warning - disables warning output if set to true (default: false) 
+		</UL>
+	</BLOCKQUOTE>
+
+	<H4>Agent Kernel</H4>
+	<BLOCKQUOTE>
+		The Agent Kernel is responsible for managing the life-cycle of all agents,
+		but it does not otherwise keep track of these agents, or attempts to manage
+		any other aspect about them. The Agent Kernel is an Agent itself, and
+		adheres to standard agent interfaces.
+	</BLOCKQUOTE>
+
+	<H4>Startup Agent</H4>
+	<BLOCKQUOTE>
+		This Startup Agent is created and started by the Agent Kernel. It is responsible for
+		loading property files from the startup directory (text files ending in
+		.startup), sorting them alphabetically, and then creating and starting
+		an agent for each using the Agent Kernel. Each new agent is defined by properties
+		(Props) loaded from each file. The startup process is synchronous, ensuring that
+		each startup agent is loaded and started before the next. You can artificially
+		specify loading order by prefixing .startup filenames with numbers
+		(ie: 100_StartupAgent.startup).
+	</BLOCKQUOTE>
+
+	<H4>Service Manager and Service Agents</H4>
+	<BLOCKQUOTE>
+		The Service Manager provides a directory service were agents can
+		register themselves as a service for other agents to lookup and use.
+		Service Agents can be extended to automatically register an agent
+		as a service with the Service Manager, and contain methods that
+		can be used by subclasses to manually register and unregister themselves.
+		Most agents are Service Agents because of the social needs of agents
+		that depend on other types of agents.
+	</BLOCKQUOTE>
+      
+        <H4>Agent Replicator</H4>
+        <BLOCKQUOTE>
+		An Agent Replicator can be used to create and start multiple instances of
+		another type of agent. This is a common activity when creating a pool of
+		agents for parallel agent architectures.
+        </BLOCKQUOTE>
+
+	<H4>Scheduler and Scheduled Agents</H4>
+	<BLOCKQUOTE>
+		The Scheduler provides scheduling services to wakeup Scheduled Agents
+		using a customized schedule. The Scheduler automatically registers itself with
+		Service Manager when it starts, and Scheduled Agents automatically schedule
+		themselves when they are started.
+	</BLOCKQUOTE>
+
+	<H4>Request Agent</H4>
+	<BLOCKQUOTE>
+		Request Agents can be extended to provide a method for passing generic
+		messages to agents as an Agent Request. The Agent Request holds references
+		to passed parameters and provides support for returning streamed output.
+		Request Agents register themselves with the Service Manager upon starting
+		(they are a subclass of Service Agent) and are commonly used by both
+		<A href="#WebAgents">Web</A> and <A href="#EmailAgents">Email</A> agents
+		for handling network requests.
+	</BLOCKQUOTE>
+
+</BLOCKQUOTE>
+
+
+
+<A NAME='WebAgents'><H3>Web Agents</H3></A>
+
+<BLOCKQUOTE>
+	The Web Agents represent a set of agents that cooperate to implement
+	the functionality of a typical web server. Because each significant
+	feature is implemented as an agent, only the required functionality
+	needs to be loaded for a specific application. This keeps things lightweight
+	and extensible, as existing components can also be replaced by others with
+	enhanced functionality.
+	<P>
+	These Web Agents pass HTTP request information to Request Agents
+	which can be extended to generate dynamic content for HTML, WAP, or even
+	XML applications. The Web Server agent itself can be easily extended
+	to support SSL using third party encryption libraries.
+
+	<H4>Supported Features</H4>
+	<UL>
+		<LI>Customizable Request Agents (Easier than servlets!)
+		<LI>File Serving
+		<LI>Server Redirection
+		<LI>Proxying
+		<LI>Client Authentication
+		<LI>Supports WAP and XML
+		<LI>Multihoming
+		<LI>Access Logging
+		<LI>Web-based Use Statistics
+		<LI>Sessions (Using Session Manager)
+		<LI>Cookies
+		<LI>Easily Extended To Use a SSL Socket Library</LI>       
+	</UL>
+
+	The following diagram illustrates the Web Agents including the
+	<A href="#KernelAgents">Kernel Agents</A> they rely upon.
+	Request Agent is extended to handle HTTP based Agent Requests to
+	provide dynamic content generation. These Web Request Agents register
+	themselves to handle specific URLs (like a CGI script) and wait for
+	the next request to handle content generation for that URL from the Web Server.
+
+	<P><I>Note: In this diagram, involvement of the Service Manager	is implied but not drawn.
+	The Service Manager is the center of the Web Agent programming.</I></P>
+
+	<H5 ALIGN='center'>
+		<IMG src="web_agents.jpeg"><BR>
+		Web Server Agents and Their Relationships
+	</H5>
+
+	This section briefly describes the role of each of the Web Agents:
+
+	<H4>Web Server</H4>
+	<BLOCKQUOTE>
+		The Web Server is responsible for listening for incoming HTTP connections
+		and directing the request to the agent responsible for handling the request.
+		The Web Server passes these requests to Request Agents which have registered themselves
+		with the Service Manager. The Web Server agent can be easily extended to support
+		more secure SSL sockets provided by third-party APIs
+		(i.e. <A href="http://www.phaos.com/e_security/prod_ssl.html">Phaos SSLava<FONT SIZE=-2><SUP>TM</SUP></FONT></A>).
+	</BLOCKQUOTE>
+	
+	<H4> Log Viewer Agent</H4>
+	<BLOCKQUOTE>
+		This agent registers itself into the ServiceManager and accepts http requests to view information 
+		stored in log files. Given a directory, this agent will look for all the files in that directory and treat 
+		them as log files. The agent uses a mapping which provides information about how these files should 
+		be displayed. The logfile mapping maps a name to a text pattern. The agent will display the names and 
+		the matching lines of the log files. 
+	</BLOCKQUOTE>
+
+	<H4>HTTP File Server</H4>
+	<BLOCKQUOTE>
+		The HTTP File Server responds by streaming back a file requested by the Web Server.
+		It serves files from a specified directory, and also handles directory indexing
+		(when enabled). It is not necessary to start the File Server agent unless static
+		files or graphics need to be served.
+	</BLOCKQUOTE>
+	
+	<H4>HTTP Put</H4>
+	<BLOCKQUOTE>
+		This agent can be loaded to support traditional HTTP Put functionality, saving files received to the specified "html_directory". 
+		You must specify this agent's service name for the "put_agent" property in the webserver. This agent can be easily replaced 
+		by a different RequestAgent for custom handling of HTTP Put requests
+	</BLOCKQUOTE>
+
+	<H4>HTTP Redirect</H4>
+	<BLOCKQUOTE>
+		This Request Agent is used by the WebServer. The WebServer uses this agent to determine whether a web 
+		request should be redirected and if so, the request is given to this agent for it to handle. 
+		This agent requires a file which lists the requests which to redirect. Requests with more than one redirect
+		(listed in the file) will be cycled. The file format is name value pairs delimited by newlines and lines starting with '#' are ignored. 
+	</BLOCKQUOTE>
+
+	<H4>HTTP Authentication</H4>
+	<BLOCKQUOTE>
+		The HTTP Authentication agent is used to provide support for client
+		authentication where the browser pops up a password dialog. When the Web Server
+		is using this agent, all unique accesses are password authorized based
+		on a list of protected <I>realms</I> read at startup from a text file.
+	</BLOCKQUOTE>
+
+	<H4>HTTP Proxy</H4>
+	<BLOCKQUOTE>
+		The HTTP Proxy forwards specific URL requests to other web servers using HTTP.
+		On startup, a list of proxy aliases is read from a text file.
+	</BLOCKQUOTE>
+
+	NOTE: <A href="webserver.html">Technical documentation</A> for the Web Agents is located in
+	<TT>docs/webserver.html</TT>
+</BLOCKQUOTE>
+
+
+<A NAME='EmailAgents'><H3>E-mail Agents</H3></A>
+
+<BLOCKQUOTE>
+	The Email Agents can be used individually or collectively to provide a variety
+	of features and services to agent applications. The Send Email Agent can send email based
+	messages to people and other email-based services. Email messages can be received
+	directly through SMTP by the Receive Email Agent and routed to Request Agents registered
+	with the Service Manager with own unique email address. The Email Bug Report Agent
+	is perfect for reporting bug and status information.
+
+	<H5 ALIGN='center'>
+		<IMG src="email_agents.jpeg"><BR>
+		E-mail Agents and Their Relationships
+	</H5>
+	
+	This section briefly describes the role of each of the Email Agents: 
+
+	<H4>Email Reporter Agent</H4>
+	<BLOCKQUOTE>
+		This is a Reporter Agent logs AK agent output to sequentially named text files. 
+		Upon loading, this agent replaces the default Reporter Agent. 
+	</BLOCKQUOTE>
+	
+
+	<H4>Receive Email Agent</H4>
+	<BLOCKQUOTE>
+		This agent opens up a server socket to receive SMTP requests and routes
+		them to agents who have registered themselves with the Service Manager
+		under a unique email address.
+	</BLOCKQUOTE>
+	
+	<H4>Receive POP3 Email Agent</H4>
+	<BLOCKQUOTE>
+		This agent opens up a server socket to a 
+      		POP3 server, downloads new email and routes them to agents who have registered themselves 
+		with the Service Manager under a unique email
+		address.
+	</BLOCKQUOTE>
+
+	<H4>Send Email Agent</H4>
+	<BLOCKQUOTE>
+		This agent queues up email messages and sends them to the smtp_host at regular intervals.
+		There are a variety of properties that can be configured which define how and when these
+		messages are sent. This agent implements the SendEmailInterface and registers with the Service 
+		Manager for other agents to use. 
+	</BLOCKQUOTE>
+
+	<H4>Auto Reply Agent</H4>
+	<BLOCKQUOTE>
+		This agent registers itself as an email address that is received
+		by the Receive Email Agent. When it receives an email message,
+		it automatically replies with a configurable response. This agent
+		can be extended to interpret the message and provide a dynamically
+		generated response instead.
+	</BLOCKQUOTE>
+
+	<H4>Email Bug Report Agent</H4>
+	<BLOCKQUOTE>
+		This agent registers itself with the Service Manager as a Bug Reporter
+		and collects bug "reports" from other agents. On a configurable schedule,
+		these bug reports are put into an email message and sent to a list of
+		recipients. It is very useful for monitoring the status of autonomous
+		agent applications.
+	</BLOCKQUOTE>
+
+	<H4>Request Dumper Agent</H4>
+	<BLOCKQUOTE>
+  
+		This is a simple Request Agent that dumps received Agent Request information
+		to the console. It is useful for viewing and/or debugging email messages
+		received by the Receive Email Agent. <I>Note: It can also be used to dump
+		requests from the Web Server.</I> 
+    
+	</BLOCKQUOTE>
+
+	<H4>Request Filter Agent</H4>
+	<BLOCKQUOTE>
+		This agent proxies requests to another request agent and in the process, it caches 
+		the props for each request. Cached requests are filtered depending on the filter_interval 
+		property and the requests that made it through the filter are emailed to the list of email addresses 
+		provided by the recipients property. 
+	</BLOCKQUOTE>
+
+</BLOCKQUOTE>
+
+<A NAME='DatabaseAgents'><H3>JDBC Agents</H3></A>
+<BLOCKQUOTE>
+	<BLOCKQUOTE> 
+		This agents interacts with the JDBC API. 
+		
+
+	<H5 ALIGN='center'>
+		<IMG src="jdbc_agents.jpeg"><BR>
+		Database Agents and Their Relationships
+	</H5>
+	<H4>JDBCAgent</H4>
+
+		<BLOCKQUOTE>
+			The JDBC Agent is used to connect to a JDBC 
+    		compatible database. This agent knows how to connect to a database using the 
+    		JDBC API. This agent is able to establish a connection with a database and 
+    		update, insert, and query tables and records. 
+		</BLOCKQUOTE>
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<A NAME='SwingAgents'><H3>Swing Agents</H3></A>
+
+<BLOCKQUOTE>
+	The Swing Agents interact with a user using the Swing API.
+
+	<H4>AbstractJFrameAgent</H4>
+	<BLOCKQUOTE>
+		This abstract Agent contains basic functionality useable
+		by an agent that manages a JFrame. Methods in this abstract
+		implementation can be overridden to create and manage any subclass of JFrame.
+		Convenience methods are provided for handling menus and the menu bar,
+		as well as the Look and Feel used by Swing.
+	</BLOCKQUOTE>
+	   
+	<H4>AbstractJFrameControler</H4>
+	<BLOCKQUOTE>
+		This class acts as an agent-based proxy for a standard AWT frame. It creates an 
+		inner class called ControlledFrame whose paint method is forwarded to the 
+		drawFrame method which is intended to be overridden by subclasses of this class.
+	</BLOCKQUOTE>
+
+	<H4>StartupEditor</H4>
+	<BLOCKQUOTE>
+		This is a Startup Agent which can be used to edit Agent Kernel
+		.startup files. To use this agent, you must invoke the com.cometway.ak.AK
+		class using the -startup_agent com.cometway.swing.Startup editor option.
+		This will load the current startup configuration into the Startup Editor
+		application, where changes to the agent Props files can be made using
+		a Swing based GUI. Saving the configuration will delete the old .startup
+		files, and write out the new configuration.
+	</BLOCKQUOTE>
+	
+	<H4>Lightbox</H4>
+	<BLOCKQUOTE>
+		This agent displays a frame that contains Lights, or more accurately
+		colored squares, that are drawn in a grid style array. The LightBox
+		agent registers itself with the Service Manager so that it may be found
+		and used by other agents to display state information.
+	</BLOCKQUOTE>
+	
+	<H4>PropsEditor</H4>
+	<BLOCKQUOTE>
+		This agent is used by the StartupEditor agent application.
+		This agent can be used to present a JFrame containing a JTable-based Agent
+		Props editor. The edit_props property must be set to reference the Props
+		that will be edited before this agent is started.
+	</BLOCKQUOTE>
+
+	<H4>StartupEditor</H4>
+	<BLOCKQUOTE>
+		This is a Startup Agent which can be used to edit Agent Kernel .startup files. 
+		To use this agent, you must invoke the com.cometway.ak.AK class using the
+		-startup_agent com.cometway.swing.Startup editor option. 
+		This will load the current startup configuration into the Startup Editor application, 
+		where changes to the agent Props files can be made using a Swing based GUI. 
+		Saving the configuration will delete the old .startup files, and write out the 
+		new configuration. 
+	</BLOCKQUOTE>
+
+
+</BLOCKQUOTE>
+
+<A NAME='ObjectManagerAgents'><H3>Object Manager Agents</H3></A>
+<BLOCKQUOTE>
+	<BLOCKQUOTE>
+	This package contains a model and reference implementations for an object-driven databases. There are implementations of memory resident and file-based Object Managers. This model can be easily extended to use SQL or XML storage mediums.
+	<H5 ALIGN='center'>
+		<IMG src="om_agents.jpeg"><BR>
+		Object Manager Agents and Their Relationships
+	</H5>
+   </BLOCKQUOTE>
+
+ <H4>Agent Server</H4>
+        <BLOCKQUOTE>
+		The Agent Server agent provides basic functionality for agent management   
+		services. It provides a method of creating and controlling agents that are
+		defined by Props stored in the Object Manager. The Agent Server
+		automatically registers itself with the Service Manager upon startup.
+        </BLOCKQUOTE>
+
+
+<H4>Session Manager and Session Reaper</H4>
+	<BLOCKQUOTE>
+		This pair of agents uses the Object Manager to manage expiring sessions.
+		The Session Manager is responsible for creating sessions, and the Session Reaper
+		is a Scheduled Agent that is responsible for removing sessions after they have
+		expired.
+	</BLOCKQUOTE>
+
+<H4>Object Manager</H4>
+	<BLOCKQUOTE>
+		This agent provides object storage services using an interface
+		which doesn't require knowledge about the storage mechanism.
+		Some Object Managers only hold information temporarily in memory,
+		while others are capable of storing to files on a hard disk,
+		or as records in an SQL database. The Object Manager automatically
+		registers itself with the Service Manager upon startup.
+	</BLOCKQUOTE>
+
+<H4>Object Cache</H4>
+    <BLOCKQUOTE>
+		This is agent is very similar to the Obect Manager except it saves to memory.
+		This agent is in-memory object manager.
+    </BLOCKQUOTE>
+
+</BLOCKQUOTE>
+
+
+<A NAME='ToolAgents'><H3>Tool Agents</H3></A>
+<BLOCKQUOTE>
+	<BLOCKQUOTE>This package contains command line tools for  working with the Agent Kernel.
+	</BLOCKQUOTE>
+  <H4>CRLFConversionAgent</H4>
+	<BLOCKQUOTE>
+		This agent converts end of line feed formatting of text files between DOS, UNIX and Macintosh formats.
+	</BLOCKQUOTE>    
+  <H4> StartupAgentBuilder</H4>
+	<BLOCKQUOTE>
+		This is an alternate StartupAgent which can be used with the AK<TT> -startup_agent</TT> command line option.
+		Upon running, it scans the startup directory, and creates a source file named StaticStartupAgent.java 
+		which is hard coded to startup the agents as specified in the startup directory. 
+	</BLOCKQUOTE>    
+</BLOCKQUOTE>
+
+
+<A NAME='IOAgent'><H3>IO Agent</H3></A>
+<BLOCKQUOTE>
+	<BLOCKQUOTE>
+	This package contains classes and tools for use with the java.io package. 
+	</BLOCKQUOTE>
+	<H4>File Logger Agent</H4>
+	<BLOCKQUOTE>
+		This agent is a service that logs text to a file.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>	
+
+	<H4>File Reporter</H4>
+	<BLOCKQUOTE>
+		This is a reporter agent that saves agent debug, error and warning messages 
+		to a file. This agent replaces the default reporter after it has started.
+	</BLOCKQUOTE>
+	
+</BLOCKQUOTE>
+   
+<TABLE WIDTH="100%"><TR>
+<TD VALIGN='top'>
+<FONT SIZE='-1'>
+Copyright &copy; 1999-2003, Comet Way, Inc.<BR>
+</FONT>
+</TD>
+<TD ALIGN='right'><A href="http://www.cometway.com"><IMG src="cometway140.gif" border=0><A></A></TD>
+</TR></TABLE>
+<BLOCKQUOTE></BLOCKQUOTE>
+<BLOCKQUOTE></BLOCKQUOTE>
+
+</BODY>
+</HTML>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

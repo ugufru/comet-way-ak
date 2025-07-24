@@ -18,7 +18,7 @@ public class EmailHeader
 	* [domain-literal]. It also does not checks to make sure after these have been removed, that it is
 	* somewhat of a valid address. A valid address contains an \"@\" and at least one \".\"
 	* @param toLine This is the To: line in the emailheader. This may or maynot include the "TO:"
-	* @param Returns an enumeration of users as strings
+	* @return an enumeration of users as strings
 	*/
 
 	public static Enumeration getSendToUsers(String toLine)
@@ -68,7 +68,7 @@ public class EmailHeader
 	* somewhat of a valid address. A valid address contains an \"@\" and at least one \".\"
 	* This is the same as getSendToUsers(String) method except this only expects one user
 	* @param toLine This is the To: line in the emailheader. This may or maynot include the "TO:"
-	* @param Returns a String with the username and host
+	* @return a String with the username and host
 	*/
 
 

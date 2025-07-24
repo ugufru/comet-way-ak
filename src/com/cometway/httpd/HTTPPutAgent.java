@@ -24,6 +24,8 @@ public class HTTPPutAgent extends WebServerExtension
 		setDefault("html_directory","./");
 		setDefault("make_directories","false");
 		setDefault("service_name","extension://.*");
+		setDefault("max_put_size","-1");
+		setDefault("allow_overwriting","true");
 
 		setDefault("webserver_service_name","none");
 		setDefault("domains","none");
@@ -68,12 +70,18 @@ public class HTTPPutAgent extends WebServerExtension
 	{
 		boolean rval = false;
 		String requestString = req.getProps().getString("request");
+		//		System.out.println(requestString);
 		if(requestString.startsWith("PUT ")) {
 			File f = getFile(req.getProps().getString("path"));
 			
 			if(f!=null) {
 				boolean success = false;
 				int contentLength = -1;
+				boolean expectContinue = false;
+				if(requestString.toLowerCase().indexOf("expect: 100-")!=-1) {
+					expectContinue = true;
+				}					
+
 				int index = requestString.toLowerCase().indexOf("content-length:");
 				if(index!=-1) {
 					index = index + 15;
@@ -86,7 +94,44 @@ public class HTTPPutAgent extends WebServerExtension
 					
 					contentLength = Integer.parseInt(requestString);
 				}
-				
+
+				if(getInteger("max_put_size")!=-1 && contentLength!=-1 && getInteger("max_put_size")<contentLength) {
+					error("Attempting to PUT a file larger than 'max_put_size' ("+getInteger("max_put_size"));
+					if(expectContinue) {
+						req.print(WebServer.getHTMLByCode(WebServer.EXPECTATION_FAILED));
+					}
+					else {
+						req.println("HTTP/1.1 204 Error\r\n\r\n");
+					}
+					return(true);
+				}
+
+				if(f.exists() && !getBoolean("allow_overwriting")) {
+					error("Cannot overwrite file: "+f);
+					if(expectContinue) {
+						req.print(WebServer.getHTMLByCode(WebServer.EXPECTATION_FAILED));
+					}
+					else {
+						req.println("HTTP/1.1 204 Error\r\n\r\n");
+					}
+					return(true);
+				}
+
+				if(f.exists() && !f.canWrite()) {
+					error("Writing to file: "+f+" is not allowed");
+					if(expectContinue) {
+						req.print(WebServer.getHTMLByCode(WebServer.EXPECTATION_FAILED));
+					}
+					else {
+						req.println("HTTP/1.1 204 Error\r\n\r\n");
+					}
+					return(true);
+				}
+
+				if(expectContinue) {
+					req.print(WebServer.getHTMLByCode(WebServer.CONTINUE));
+				}
+
 				if(contentLength==-1) {
 					FileOutputStream out = null;
 					try {

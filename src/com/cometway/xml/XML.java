@@ -83,14 +83,21 @@ public final class XML
 	/**
 	 * This method decodes all the XML 1.0 escape codes in the String parameter.
 	 */
-    public static String decode(String in)
+	public static String decode(String in)
 	{
 		StringBuffer rval = new StringBuffer();
 		for(int x=0;x<in.length();x++) {
 			if(in.charAt(x)=='&') {
 				int index = x;
-				while(in.charAt(++index)!=';') {;}
+				try {
+					while(in.charAt(++index)!=';') {;}
+				}
+				catch(IndexOutOfBoundsException ioob) {
+					// this isn't an escape code
+					rval.append("&");
+				}
 				String tmp = in.substring(x+1,index);
+				int notEscape = x;
 				x = index;
 				if(tmp.equals("quot")) {
 					rval.append("\"");
@@ -163,8 +170,15 @@ public final class XML
 						rval.append((char)accum);
 					}
 					else {
-						int c = Integer.parseInt(tmp.substring(1).trim());
-						rval.append((char)c);
+						try {
+							int c = Integer.parseInt(tmp.substring(1).trim());
+							rval.append((char)c);
+						}
+						catch(NumberFormatException nfe) {
+							// OK... this isn't an escape code
+							rval.append("&");
+							x = notEscape;
+						}
 					}
 				}
 				else {

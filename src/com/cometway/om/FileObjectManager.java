@@ -100,7 +100,6 @@ public class FileObjectManager extends ServiceAgent implements IObjectManager
 	/**
 	 * This constructor creates all the directories that doesn't exist. Initialzes local
 	 * fields, Reads all new props from root directory. 
-	 * @param rootdir This is the File of the directory to store all persistence files
 	 * @exception IOException This exception is thrown if the root directory is invalid or could not be used.
 	 */
 	protected void initialize() throws IOException

@@ -65,7 +65,7 @@ public interface ISchedule
 	* return true.
 	*
 	* @param s a String reference
-	* @result true if the schedule is valid; false otherwise.
+	* @return true if the schedule is valid; false otherwise.
 	 */
 
 	public boolean setSchedule(String s);

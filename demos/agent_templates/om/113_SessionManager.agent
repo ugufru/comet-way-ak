@@ -1,0 +1,6 @@
+agent_id=113
+classname=com.cometway.om.SessionManager
+name=SessionManager
+om_service_name=object_manager
+service_name=session_manager
+session_type=session

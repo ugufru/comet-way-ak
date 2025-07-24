@@ -1,0 +1,3 @@
+agent_id=121
+classname=com.cometway.reporting.VT100ConsoleReporter
+name=VT100ConsoleReporter

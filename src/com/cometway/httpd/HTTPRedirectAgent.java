@@ -107,22 +107,22 @@ public class HTTPRedirectAgent extends WebServerExtension implements Runnable
 			boolean hasDefaultHost = false;
 			while(line!=null) {
 				if(!line.startsWith("#")) {
-					int index = line.indexOf("=");
+					int index = line.indexOf(">");
 					if(index!=-1) {
 						String lval = line.substring(0,index).trim();
 						if(lval.length()>0) {
-							redirects.put(lval,line.substring(index+1));
+							if(lval.charAt(lval.length()-1)=='/') {
+								lval = lval.substring(0,lval.length()-1);
+							}
+							redirects.put("*"+lval,line.substring(index+1));
 						}
 					}
 					else {
-						index = line.indexOf(">");
+						index = line.indexOf("=");
 						if(index!=-1) {
 							String lval = line.substring(0,index).trim();
 							if(lval.length()>0) {
-								if(lval.charAt(lval.length()-1)=='/') {
-									lval = lval.substring(0,lval.length()-1);
-								}
-								redirects.put("*"+lval,line.substring(index+1));
+								redirects.put(lval,line.substring(index+1));
 							}
 						}
 					}
@@ -147,9 +147,24 @@ public class HTTPRedirectAgent extends WebServerExtension implements Runnable
 	public boolean handleRequest(HTTPAgentRequest request)
 	{
 		OutputStream socketOut = request.getOutputStream();
-		String path = request.getProps().getString("path");
+		String path = request.getProps().getString("request");
 		String host = request.getProps().getString("host");
 		boolean rval = false;
+
+		if(path.indexOf(" ")!=-1) {
+			path = path.substring(path.indexOf(" ")+1);
+			if(path.indexOf(" ")!=-1) {
+				path = path.substring(0,path.indexOf(" "));
+			}
+			else {
+				if(path.indexOf("\n")!=-1) {
+					path = path.substring(0,path.indexOf("\n"));
+				}
+			}
+			path = path.trim();
+		}
+
+		//		debug("PATH = "+path);
 
 		try {
 			String location = null;
@@ -187,10 +202,15 @@ public class HTTPRedirectAgent extends WebServerExtension implements Runnable
 			}
 
 			if(location!=null) {
+				debug("Redirecting to location: "+location);
+			
 				socketOut.write(WebServer.getHTMLByCode(WebServer.MOVED,null,"Connection: Close\nLocation: "+location+"\n").getBytes());
 				((HTTPAgentRequest)request).returnVal = "302";
 				socketOut.flush();
 				rval = true;
+			}
+			else {
+				debug("Found no redirect location for host/path: "+host+" "+path);
 			}
 		}
 		catch(Exception e) {

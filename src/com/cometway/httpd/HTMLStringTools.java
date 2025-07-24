@@ -2,6 +2,7 @@
 package com.cometway.httpd;
 
 import java.util.Vector;
+import java.io.UnsupportedEncodingException;
 
 import com.cometway.props.Props;
 import com.cometway.xml.XML;
@@ -21,16 +22,55 @@ public class HTMLStringTools
 
 
 	/**
+	 * Escapes a HTML String from double quotes
+	 */
+	public static String escapeDoubleQuotes(String in)
+	{
+		StringBuffer rval = new StringBuffer();
+		int index = in.indexOf("\"");
+		int index2 = 0;
+		while(index!=-1) {
+			rval.append(in.substring(index2,index));
+			rval.append("&quot;");
+			index2 = index+1;
+			index = in.indexOf("\"",index2);
+		}
+		rval.append(in.substring(index2));
+
+		return(rval.toString());
+	}
+
+	/**
+	 * Escapes a HTML String from single quotes
+	 */
+	public static String escapeSingleQuotes(String in)
+	{
+		StringBuffer rval = new StringBuffer();
+		int index = in.indexOf("'");
+		int index2 = 0;
+		while(index!=-1) {
+			rval.append(in.substring(index2,index));
+			rval.append("&#39;");
+			index2 = index+1;
+			index = in.indexOf("'",index2);
+		}
+		rval.append(in.substring(index2));
+
+		return(rval.toString());
+	}
+
+
+	/**
 	 * This method extracts the first img tag that is in the data
 	 */
-	public static String extractIMGTag(String data, org.apache.oro.text.perl.Perl5Util perl)
+	public static String extractIMGTag(String data, java.util.regex.Pattern compiledPattern)
 	{
 		IntegerPair p = null;
-		if(perl == null) {
+		if(compiledPattern == null) {
 			p = jGrep.indecesOf("<[\\s]*img[^>]*>",data,true);
 		}
 		else {
-			p = jGrep.indecesOf("<[\\s]*img[^>]*>",data,true,perl);
+			p = jGrep.indecesOf("<[\\s]*img[^>]*>",data,true,compiledPattern);
 		}
 
 		if(p==null) {
@@ -61,13 +101,13 @@ public class HTMLStringTools
 	/**
 	 * This method removes all the HTML tags in the data
 	 */
-	public static String removeHTMLTags(String text, org.apache.oro.text.perl.Perl5Util perl)
+	public static String removeHTMLTags(String text, java.util.regex.Pattern compiledPattern)
 	{
-		if(perl == null) {
+		if(compiledPattern == null) {
 			return (jGrep.grepAndReplaceText("<[A-Za-z\\s]*[^>]*>","",text,true));
 		}
 		else {
-			return (jGrep.grepAndReplaceText("<[A-Za-z\\s]*[^>]*>","",text,true,perl));
+			return (jGrep.grepAndReplaceText("<[A-Za-z\\s]*[^>]*>","",text,true,compiledPattern));
 		}
 	}
 
@@ -90,12 +130,12 @@ public class HTMLStringTools
 	/** 
 	 * This utility method removes form tags.
 	 */
-	public static String removeFormTags(String text, org.apache.oro.text.perl.Perl5Util perl)
+	public static String removeFormTags(String text, java.util.regex.Pattern compiledPattern)
 	{
-		String rval = jGrep.grepAndReplaceText("</*input[^>]*>","",text,true,perl);
-		rval = jGrep.grepAndReplaceText("</*select[^>]*>","",rval,true,perl);
-		rval = jGrep.grepAndReplaceText("</*option[^>]*>","",rval,true,perl);
-		rval = jGrep.grepAndReplaceText("</*form[^>]*>","<BR>",rval,true,perl);
+		String rval = jGrep.grepAndReplaceText("</*input[^>]*>","",text,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*select[^>]*>","",rval,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*option[^>]*>","",rval,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*form[^>]*>","<BR>",rval,true,compiledPattern);
 
 		return (rval);
 
@@ -117,11 +157,11 @@ public class HTMLStringTools
 	/** 
 	 * This utility method removes table tags.
 	 */
-	public static String removeTableTags(String text, org.apache.oro.text.perl.Perl5Util perl)
+	public static String removeTableTags(String text, java.util.regex.Pattern compiledPattern)
 	{
-		String rval = jGrep.grepAndReplaceText("</*table[^>]*>","<BR>",text,true,perl);
-		rval = jGrep.grepAndReplaceText("</*t[drhc][^>]*>","<BR>",rval,true,perl);
-		rval = jGrep.grepAndReplaceText("</*span[^>]*>","",rval,true,perl);
+		String rval = jGrep.grepAndReplaceText("</*table[^>]*>","<BR>",text,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*t[drhc][^>]*>","<BR>",rval,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*span[^>]*>","",rval,true,compiledPattern);
 
 		return (rval);
 	}
@@ -138,9 +178,9 @@ public class HTMLStringTools
 	 * This utility method removes horizontal rule tags.
 	 */
 
-	public static String removeHRTags(String text, org.apache.oro.text.perl.Perl5Util perl)
+	public static String removeHRTags(String text, java.util.regex.Pattern compiledPattern)
 	{
-		return (jGrep.grepAndReplaceText("<hr[^>]*>","<BR>",text,true,perl));
+		return (jGrep.grepAndReplaceText("<hr[^>]*>","<BR>",text,true,compiledPattern));
 	}
 
 	/** 
@@ -159,11 +199,11 @@ public class HTMLStringTools
 	 * This utility method removes list tags.
 	 */
 
-	public static String removeListTags(String text, org.apache.oro.text.perl.Perl5Util perl)
+	public static String removeListTags(String text, java.util.regex.Pattern compiledPattern)
 	{
-		String rval = jGrep.grepAndReplaceText("</*[dou]l[^>]*>","<BR>",text,true,perl);
-		rval = jGrep.grepAndReplaceText("</*li[^>]*>","<BR>",rval,true,perl);
-		rval = jGrep.grepAndReplaceText("</*d[dt][^>]*>","<BR>",rval,true,perl);
+		String rval = jGrep.grepAndReplaceText("</*[dou]l[^>]*>","<BR>",text,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*li[^>]*>","<BR>",rval,true,compiledPattern);
+		rval = jGrep.grepAndReplaceText("</*d[dt][^>]*>","<BR>",rval,true,compiledPattern);
 
 		return (rval);
 	}
@@ -505,6 +545,11 @@ public class HTMLStringTools
 		return(encode(in,false,false));
 	}
 
+	public static String encode(String in, boolean fullEncode, boolean encodeForwardSlash)
+	{
+		return(encode(in,false,false,"UTF-8"));
+	}
+
 	/**
 	 * This method encodes a URL and the data embedded in the URL so that it can be requested.
 	 * If the boolean parameter, fullEncode, is set to true, every character in the String will
@@ -515,10 +560,56 @@ public class HTMLStringTools
 	 * all letters, numbers, and the '*', '-', '.', '@', and '_' characters are not encoded   <br>
 	 * everything else will be encoded as '%XY' where X and Y are the hex value of the character
 	 */
-	public static String encode(String in, boolean fullEncode, boolean encodeForwardSlash)
+	public static String encode(String in, boolean fullEncode, boolean encodeForwardSlash, String charEncoding)
 	{
 		StringBuffer rval = new StringBuffer();
 
+		try {
+			byte[] inBytes = in.getBytes(charEncoding);
+			if(fullEncode) {
+				for(int x=0;x<inBytes.length;x++) {
+					rval.append("%");
+					rval.append(intToHex((int)inBytes[x]));
+				}
+			}
+			else {
+				for(int x=0;x<inBytes.length;x++) {
+					int b = (int)inBytes[x] & 0xFF;
+					if(b == 42 ||
+						b == 45 ||
+						b == 46 ||
+						(b >= 48 && b <= 57) ||
+						(b >= 64 && b <= 90) ||
+						b == 95 ||
+						(b >= 97 && b <= 122)) {
+						rval.append((char)inBytes[x]);
+					}
+					else if(b == 47) {
+						if(encodeForwardSlash) {
+							rval.append("%");
+							rval.append(intToHex(b));
+						}
+						else {
+							rval.append(in.charAt(x));
+						}
+					}
+					else if(b == 32) {
+						rval.append("+");
+					}
+					else {
+						rval.append("%");
+						rval.append(intToHex(b));
+					}
+				}
+			}
+
+		}
+		catch(UnsupportedEncodingException e) {
+			System.err.println("Unsupported Character Encoding: "+charEncoding);
+			e.printStackTrace();
+		}
+
+			/*
 		int[] inArray = new int[in.length()];
 		for(int x=0;x<inArray.length;x++) {
 			inArray[x] = (int)in.charAt(x);
@@ -559,7 +650,7 @@ public class HTMLStringTools
 				}
 			}
 		}
-
+			*/
 		return(rval.toString());
 	}
 
@@ -576,8 +667,14 @@ public class HTMLStringTools
 				rval.append(" ");
 			}
 			else if(c=='%') {
-				rval.append((char)hexToInt(in.substring(x+1,x+3)));
-				x = x+2;
+				if(in.length()>=x+3) {
+					rval.append((char)hexToInt(in.substring(x+1,x+3)));
+					x = x+2;
+				}
+				else {
+					// We assume this URL is malformed and we drop the end
+					x=in.length();
+				}
 			}
 			else {
 				rval.append(c);
@@ -775,6 +872,7 @@ public class HTMLStringTools
 		}
 		StringBuffer b = new StringBuffer();
 		XMLParser parser = new XMLParser(html);
+		//		parser.setDecodeEscapeCodes(false);
 
 		try {
 			XMLToken t = parser.nextToken();
@@ -856,6 +954,7 @@ public class HTMLStringTools
 		while(t!=null && !t.data.equals("</UL>") && !t.data.equals("</OL>")) {
 			if(t.data.equals("<LI>")) {
 				t = parser.nextToken();
+				//				System.out.println("1 token="+t.data);
 				b.append(prefix);
 				while(t!=null && !t.data.equals("<LI>")) {
 					if(t.data.equals("<OL>") || t.data.equals("<UL>")) {
@@ -864,6 +963,7 @@ public class HTMLStringTools
 						}
 						convertHTMLListToPlainText(t,parser,b,depth+1);
 						t = parser.nextToken();
+						//				System.out.println("2 token="+t.data);
 					}
 					else {
 						convertHTMLObjectToPlainText(t,parser,b);
@@ -872,6 +972,7 @@ public class HTMLStringTools
 						}
 						else {
 							t = parser.nextToken();
+							//				System.out.println("3 token="+t.data);
 						}
 					}
 				}
@@ -882,6 +983,7 @@ public class HTMLStringTools
 			else {
 				// We'll ignore anything else inside a list that isn't a <LI>
 				t = parser.nextToken();
+				//				System.out.println("4 token="+t.data);
 			}
 		}
 		if(depth==0) {
@@ -939,6 +1041,7 @@ public class HTMLStringTools
 		}
 		else if (t.type == XML.ELEMENT_CONTENT) {
 			b.append(XML.decode(t.data));
+			//			System.out.println("Object="+t.data);
 		}
 	}
 
@@ -986,7 +1089,7 @@ public class HTMLStringTools
 					b.append("<A HREF='mailto:");
 					b.append(word);
 					b.append("'>");
-					b.append(word);
+					b.append(XML.encode(word));
 					b.append("</A> ");
 				}
 				// check if image
@@ -997,128 +1100,109 @@ public class HTMLStringTools
 					b.append("'> ");
 				}
 				// check if link
-				else if(word.indexOf(":")>0 && word.indexOf(":")<word.length()-4) {
+				else if(word.indexOf(":")>0 && (word.indexOf(":") + 3 < word.length()) && 
+						  (word.startsWith("mailto:") || word.startsWith("https://") || word.startsWith("http://") ||
+							word.startsWith("nntp://") || word.startsWith("ntp://") || word.startsWith("ftp://") ||
+							word.startsWith("rsync://") || word.startsWith("file://") || word.startsWith("telnet://") ||
+							word.startsWith("javascript:") || word.startsWith("irc://") || word.startsWith("mms://") ||
+							word.startsWith("about:") || word.startsWith("dict://") || word.startsWith("dav:") ||
+							word.startsWith("dns:") || word.startsWith("im:") || word.startsWith("ldap://") ||
+							word.startsWith("pop://") || word.startsWith("snmp://") || word.startsWith("aim:") ||
+							word.startsWith("cvs://") || word.startsWith("sftp://") || word.startsWith("ssh://"))) {
 					b.append("<A HREF='");
 					b.append(word);
 					b.append("' TARGET='_blank'>");
-					b.append(word);
+					b.append(XML.encode(word));
 					b.append("</A> ");
 				}
 				// bold checks start here
-				else if(word.startsWith("*") && !boldOn) {
-					b.append("<B>");
-					// extra check here to see if bold is only for this word
-					if(word.lastIndexOf("*")==word.length()-1) {
-						b.append(word.substring(1,word.length()-1));
-						b.append("</B> ");
+				else if(word.startsWith("*") && !word.equals("*") && !boldOn) {
+					boolean isBold = false;
+					if(!word.equals("**")) {
+						if(word.lastIndexOf("*")!=word.indexOf("*")) {
+							isBold = true;
+						}
+						else {					
+							for(int z=x;z<words.size();z++) {
+								String tmpWord = (String)words.elementAt(z);
+								if(tmpWord.lastIndexOf("*")==tmpWord.length()-1 ||
+									(tmpWord.length()>1 && tmpWord.indexOf("*")!=-1)) {
+									isBold = true;
+									break;
+								}							
+							}
+						}
 					}
-					else if(word.length()>1 && word.lastIndexOf("*.")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</B>. ");
-					}
-					else if(word.length()>1 && word.lastIndexOf("*,")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</B>, ");
-					}
-					else if(word.length()>1 && word.lastIndexOf("*?")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</B>? ");
-					}
-					else if(word.length()>1 && word.lastIndexOf("*:")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</B>: ");
-					}
-					else if(word.length()>1 && word.lastIndexOf("*;")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</B>; ");
-					}
-					else if(word.length()>1 && word.lastIndexOf("*!")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</B>! ");
-					}
-					else {
-						boldOn = true;
-						b.append(word.substring(1));
-						b.append(" ");
+					if(isBold) {
+						b.append("<B>");
+						// extra check here to see if bold is only for this word
+						if(word.lastIndexOf("*")==word.length()-1) {
+							System.out.println(word);
+							b.append(word.substring(1,word.length()-1));
+							b.append("</B> ");
+						}
+						else if(word.length()>1 && word.lastIndexOf("*")!=word.indexOf("*")) {
+							b.append(word.substring(1,word.lastIndexOf("*")));
+							b.append("</B>");
+							b.append(word.substring(word.lastIndexOf("*")+1));
+						}
+						else {
+							boldOn = true;
+							b.append(word.substring(1));
+							b.append(" ");
+						}
 					}
 				}
-				else if(word.lastIndexOf("*")==word.length()-1 && boldOn) {
-					b.append(word.substring(0,word.length()-1));
+				else if(boldOn && word.indexOf("*")!=-1) {
+					//word.lastIndexOf("*")==word.length()-1 && boldOn) {
+					b.append(word.substring(0,word.indexOf("*")));
 					b.append("</B> ");
+					b.append(word.substring(word.indexOf("*")+1));
 					boldOn = false;
 				}
 				// italics checks here
-				else if(word.startsWith("\"") && !boldOn && !italicsOn) {
-					b.append("<I>");
-					// extra check here to see if italics is only for this word
-					if(word.lastIndexOf('"')==word.length()-1) {
-						b.append(word.substring(1,word.length()-1));
-						b.append("</I> ");
+				else if(word.startsWith("\"") && !word.equals("\"") && !boldOn && !italicsOn) {
+					boolean isItalics = false;
+					if(!word.equals("\"\"")) {
+						if(word.lastIndexOf("\"")!=word.indexOf("\"")) {
+							isItalics = true;
+						}
+						else {					
+							for(int z=x;z<words.size();z++) {
+								String tmpWord = (String)words.elementAt(z);
+								if(tmpWord.lastIndexOf("\"")==tmpWord.length()-1 ||
+									(tmpWord.length()>1 && tmpWord.indexOf("\"")!=-1)) {
+									isItalics = true;
+									break;
+								}							
+							}
+						}
 					}
-					else if(word.length()>1 && word.lastIndexOf("\".")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</I>. ");
-					}
-					else if(word.length()>1 && word.lastIndexOf("\",")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</I>, ");
-					}
-					else if(word.length()>1 && word.lastIndexOf("\"?")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</I>? ");
-					}
-					else if(word.length()>1 && word.lastIndexOf("\":")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</I>: ");
-					}
-					else if(word.length()>1 && word.lastIndexOf("\";")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</I>; ");
-					}
-					else if(word.length()>1 && word.lastIndexOf("\"!")==word.length()-2) {
-						b.append(word.substring(1,word.length()-2));
-						b.append("</I>! ");
-					}
-					else {
-						italicsOn = true;
-						b.append(word.substring(1));
-						b.append(" ");
+					if(isItalics) {
+						b.append("<I>");
+						// extra check here to see if bold is only for this word
+						if(word.lastIndexOf("\"")==word.length()-1) {
+							System.out.println(word);
+							b.append(word.substring(1,word.length()-1));
+							b.append("</I> ");
+						}
+						else if(word.length()>1 && word.lastIndexOf("\"")!=word.indexOf("\"")) {
+							b.append(word.substring(1,word.lastIndexOf("\"")));
+							b.append("</I>");
+							b.append(word.substring(word.lastIndexOf("\"")+1));
+						}
+						else {
+							italicsOn = true;
+							b.append(word.substring(1));
+							b.append(" ");
+						}
 					}
 				}
-				else if(word.lastIndexOf('"')==word.length()-1 && !boldOn && italicsOn) {
-					b.append(word.substring(0,word.length()-1));
+				else if(italicsOn && word.indexOf("\"")!=-1) {
+					//word.lastIndexOf("*")==word.length()-1 && boldOn) {
+					b.append(word.substring(0,word.indexOf("\"")));
 					b.append("</I> ");
-					italicsOn = false;
-				}
-				// special check for punctuation and italics
-				else if(word.length()>1 && word.lastIndexOf("\".")==word.length()-2 && !boldOn && italicsOn) {
-					b.append(word.substring(0,word.length()-2));
-					b.append("</I>. ");
-					italicsOn = false;
-				}
-				else if(word.length()>1 && word.lastIndexOf("\",")==word.length()-2 && !boldOn && italicsOn) {
-					b.append(word.substring(0,word.length()-2));
-					b.append("</I>, ");
-					italicsOn = false;
-				}
-				else if(word.length()>1 && word.lastIndexOf("\"?")==word.length()-2 && !boldOn && italicsOn) {
-					b.append(word.substring(0,word.length()-2));
-					b.append("</I>? ");
-					italicsOn = false;
-				}
-				else if(word.length()>1 && word.lastIndexOf("\":")==word.length()-2 && !boldOn && italicsOn) {
-					b.append(word.substring(0,word.length()-2));
-					b.append("</I>: ");
-					italicsOn = false;
-				}
-				else if(word.length()>1 && word.lastIndexOf("\";")==word.length()-2 && !boldOn && italicsOn) {
-					b.append(word.substring(0,word.length()-2));
-					b.append("</I>; ");
-					italicsOn = false;
-				}
-				else if(word.length()>1 && word.lastIndexOf("\"!")==word.length()-2 && !boldOn && italicsOn) {
-					b.append(word.substring(0,word.length()-2));
-					b.append("</I>! ");
+					b.append(word.substring(word.indexOf("\"")+1));
 					italicsOn = false;
 				}
 				// everything else goes here:
@@ -1298,12 +1382,32 @@ public class HTMLStringTools
 						b.append(convertPlainTextLineToHTML(line.substring(1)));
 						b.append(EOL);	
 						x++;
+
+						while(x<lines.size()) {
+							line = (String)lines.elementAt(x);
+							// This is a special case, where a list element happens to span more than one line
+							if(!line.startsWith("#") && !line.startsWith("-") && line.trim().length()>0) {
+								//								b.append("<BR>");
+								b.append(convertPlainTextLineToHTML(line));
+								b.append(EOL);
+								x++;
+							}
+							else {
+								break;
+							}
+						}
+						if(x>=lines.size()) {
+							break;
+						}
+
+						/*
 						if(x<lines.size()) {
 							line = (String)lines.elementAt(x);
 						}
 						else {
 							break;
 						}
+						*/
 					}
 					else {
 						// we've already read a line that isn't a list element, since this is a for loop, we gotta go back
@@ -1735,43 +1839,12 @@ public class HTMLStringTools
 
 	public static void main(String[] args)
 	{
-		//		String s = args[0];
-		//		for(int x=1;x<args.length;x++) {
-		//			s = " "+args[x];
-		//		}
-		//						String s = "This should be the first \"paragraph\" and *this should \"not\" be in *italics*\n\nThis *should all be in bold\n-and this is item 1\n- and this is *item 2 which should be in bold\n-- \"embedded list item\" 1\n--item 2 in embedded\n###*this* is a numbered embedded list\n### here's another\n-- back to my old list\nOH SNAP, I never continued my list but this should\nbe in a paragraph by itself\n\nThis is the last paragraph [this is NOT an image] but [this_is_an_image] ftp://link @not an email email@host";
-		//		String s = "# distinguish between personal and general space by performing particular movements during a skill test\n# distinguish between whole body and isolation movements by performing particular movements during a skill test\n# demonstrate loco motor and movements with big movement and small isolation\n# demonstrate non-locomotor movements within a personal space and a general space\n";
-		//		String s = "*Handouts:* \n\n# Functions of ingredients\n# Recipes\n *Handouts:* \n\n# Functions of ingredients\n# Recipes\n";
-		//		String s = "* item 1 blah\n* item 2 blah blah\n*bold*\n";
-		//		String s = "# level 1\n##level 2 \n### level 3";
-		//		String s = "This is where we develop the lesson plan.\n\nOrdered or \"numbered\" lists are created by putting a pound sign (#)  \nat the beginning of each line in the list.\n# First thing.\n# Second thing.\n# Third thing.\n\nUnordered or \"bulleted\" lists are created by putting a dash (-) at  \nthe beginning of each line in the list.\n# Thing.\n# Another thing.\n# One more thing.\n\nLists can be nested up to three deep by putting the number of pound  \nsigns (#) or dashes (-) at corespond to the depth level:\n# Level 1\n## Level 2\n## Level 2\n### Level 3\n### Level 3\n### Level 3\n## Level 2\n### Level 3\n### Level 3\n### Level 3\n# Level 1\n## Level 2\n## Level 2\n\nWe can make words *bold* by putting asterisks on *both sides* of a  \nword or phrase. When words and phrases \"are quoted\" they are  \nitalicized according to standard typographical conventions.\n\nAll you have to do to create a link is type the link:\nhttp://www.cometway.com\n\nAll you have to do to create an email link is type the email address:\npaul@cometway.com";
-		String s = "Begin a discussion using examples of inductive reasoning like: \"After petting a cat for the first time Kristen began to sneeze.  She also  began sneezing the next four times she was near a cat.  Based on this past experience, Kristen reasons that she is allergic to cats.\"\n\nThe teacher may include several other examples.\n\nNext, call upon random students to pull the letter from under his/her chair and show it to the rest of the class.  After a few letters are viewed the students should be able to conclude that the seat number corresponds to the letter of the letter position in the alphabet.  A = 1, B = 2, C = 3, etc.  Students should be able to tell what letter  \nthey expect to find underneath a specified desk.  This leads to the  \ndefinition of conjecture - an educated guess.  Students use the  \nexample to make a conclusion - inductive reasoning.  This conclusions  \nis probable true, but not necessarily true.\n\nNext, the teacher will illustrate a number pattern.  Example: 1, 3,  \n5, 7 __ or 2, 4, 6, 8, __.  Have the students complete Part I of  \nWorksheet 1.\n\nDiscuss the solutions and have the students explain their reasoning.   \nReferring back to the earlier example with the letters under the  \nseats, the students will be asked what letter they feel is under seat  \nX. (Seat X will be a seat set up not to follow conjecture.)  For  \nexample, seat 14 will have an E instead of the supposed N.\n\nThis demonstrates that conjectures are not facts, just an educated  \nguess and seat X basically proved our original conjecture wrong.   \nSeat X would be a counter example.  Students will complete Part II of  \nWorksheet 1.\n\nRandom students will be chosedn to give their answers and explain how  \nthey came to their conclustion.";
+		String s = "This'll *be* fun! *yes*...\n\nThis is going to be \"fun\"!";
+		String b = convertPlainTextToHTML(s);
+		System.out.println(s);
+		System.out.println(b);
+		System.out.println(convertHTMLToPlainText(b));
 
-
-		String result = convertPlainTextToHTML(s);
-
-
-		System.out.println("\n"+s);
-		System.out.println("\n"+result);
-
-		result = convertHTMLToPlainText(result);
-		System.out.println("\n"+s);
-		System.out.println("\n"+result);
-
-		String s2 = convertPlainTextToHTML(result);
-		s2 = convertHTMLToPlainText(s2);
-
-		if(s2.equals(result)) {
-			System.out.println("Looks good");
-		}
-		else {
-			System.out.println("!!!!!!!!!!!\n"+s2+"!!!!!!!!!!!!!\n");
-			System.out.println("@@@@@@@@@@@\n"+result+"@@@@@@@@@@@@@\n");
-		}
-		System.out.println(convertPlainTextToHTML(s2));
-
-		s2 = "<OL>oh shit<OL><LI>element</LI></OL>";
-		System.out.println(convertHTMLToPlainText(s2));
 	}
 }
 

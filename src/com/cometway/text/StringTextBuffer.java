@@ -28,7 +28,7 @@ public class StringTextBuffer implements ITextBuffer
 
 	/**
 	 * Initialize the text buffer with the supplied String.
-	* @param a reference to a String.
+	* @param s reference to a String.
 	 */
 
 
@@ -199,7 +199,7 @@ public class StringTextBuffer implements ITextBuffer
 	* of the inserted text.
 	*
 	* @param str a reference to a String.
-	* @param atIndex the index of the location where the text should be inserted.
+	* @param position the index of the location where the text should be inserted.
 	 */
 
 

@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<props_list>
+	<props>
+		<agent_id>100</agent_id>
+		<classname>com.cometway.ak.ServiceManager</classname>
+		<hide_debug>true</hide_debug>
+		<name>ServiceManager</name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>110</agent_id>
+		<cell_circles>false</cell_circles>
+		<cell_filled>true</cell_filled>
+		<cell_height>20</cell_height>
+		<cell_width>20</cell_width>
+		<classname>com.cometway.swing.LightBox</classname>
+		<frame_title>Light Box</frame_title>
+		<frame_visible>true</frame_visible>
+		<grid_height>16</grid_height>
+		<grid_visible>true</grid_visible>
+		<grid_width>16</grid_width>
+		<hide_debug>true</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>LightBox</name>
+		<offset>13</offset>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>120</agent_id>
+		<classname>LightBoxDemo</classname>
+		<hide_debug>true</hide_debug>
+		<name>LightBoxDemo</name>
+		<startup>true</startup>
+	</props>
+</props_list>

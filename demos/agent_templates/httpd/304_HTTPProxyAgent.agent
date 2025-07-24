@@ -1,0 +1,9 @@
+agent_id=304
+check_interval=300000
+classname=com.cometway.httpd.HTTPProxyAgent
+hide_debug=false
+hide_println=false
+hide_warning=false
+initial_wait_time=2000
+name=HTTPProxyAgent
+proxy_file=./http.proxy

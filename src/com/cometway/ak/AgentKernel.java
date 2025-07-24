@@ -90,7 +90,7 @@ public class AgentKernel extends Agent implements AgentKernelInterface
 			}
 			catch (Exception e)
 			{
-				error("Could not create Agent: " + classname, e);
+				error("Could not create Agent: " + classname + "\n" + agentProps, e);
 			}
 		}
 

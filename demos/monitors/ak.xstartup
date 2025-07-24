@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<props_list>
+	<props>
+		<agent_id>100</agent_id>
+		<classname>com.cometway.ak.ServiceManager</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>ServiceManager</name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>200</agent_id>
+		<classname>com.cometway.ak.Scheduler</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>Scheduler</name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>300</agent_id>
+		<classname>MemoryMonitor</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>MemoryMonitor</name>
+		<schedule>between 0:0:0-23:59:59 every 5s</schedule>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>400</agent_id>
+		<classname>LoadMonitor</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>LoadMonitor</name>
+		<schedule>between 0:0:0-23:59:59 every 5s</schedule>
+		<startup>true</startup>
+	</props>
+</props_list>

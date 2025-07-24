@@ -31,6 +31,12 @@ public class CookiePropsContainer extends AbstractPropsContainer
 		keys.addElement("path");
 		keys.addElement("domain");
 		keys.addElement("secure");
+
+		name = "";
+		value = "";
+		expires = "";
+		path = "";
+		domain = "";
 	}
 
 
@@ -118,7 +124,7 @@ public class CookiePropsContainer extends AbstractPropsContainer
 
 			if (name.equals("secure"))
 			{
-				value = new Boolean(lowerCookie.trim().endsWith("secure"));
+				value = Boolean.valueOf(lowerCookie.trim().endsWith("secure"));
 			}
 			else
 			{
@@ -207,7 +213,7 @@ public class CookiePropsContainer extends AbstractPropsContainer
 
 		if (success)
 		{
-			name = null;
+			name = "";
 		}
 		else
 		{
@@ -215,7 +221,7 @@ public class CookiePropsContainer extends AbstractPropsContainer
 
 			if (success)
 			{
-				value = null;
+				value = "";
 			}
 			else
 			{
@@ -223,7 +229,7 @@ public class CookiePropsContainer extends AbstractPropsContainer
 
 				if (success)
 				{
-					expires = null;
+					expires = "";
 				}
 				else
 				{
@@ -231,7 +237,7 @@ public class CookiePropsContainer extends AbstractPropsContainer
 
 					if (success)
 					{
-						path = null;
+						path = "";
 					}
 					else
 					{
@@ -239,7 +245,7 @@ public class CookiePropsContainer extends AbstractPropsContainer
 
 						if (success)
 						{
-							domain = null;
+							domain = "";
 						}
 						else
 						{

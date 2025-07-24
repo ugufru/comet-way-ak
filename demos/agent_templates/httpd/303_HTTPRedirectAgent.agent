@@ -1,0 +1,9 @@
+agent_id=303
+check_interval=300000
+classname=com.cometway.httpd.HTTPRedirectAgent
+hide_debug=false
+hide_println=false
+hide_warning=false
+initial_wait_time=2000
+name=HTTPRedirectAgent
+redirect_file=./http.redirect

@@ -1,0 +1,12 @@
+agent_id=307
+bind_port=8000
+classname=com.cometway.httpd.WebServer
+hide_debug=false
+hide_println=false
+hide_warning=false
+index_agent=HTTPFileServerAgent
+log_requests=true
+max_connections=20
+name=WebServer
+socket_linger_time=2000
+thread_pool_timeout=20000

@@ -198,19 +198,19 @@ public class HTTPRequest
 	}
 
 
-	public boolean writeRequest(BufferedWriter out)
+	public boolean writeRequest(OutputStream out)
 	{
 		boolean rval = false;
 		if(dataSource==null) {
 			try {
 				String requestString = toString();
 				while(requestString.length()>512) {
-					out.write(requestString.substring(0,512));
+					out.write(requestString.substring(0,512).getBytes());
 					out.flush();
 					requestString = requestString.substring(512);
 				}
 				if(requestString.length()>0) {
-					out.write(requestString);
+					out.write(requestString.getBytes());
 					out.flush();
 				}
 				rval = true;
@@ -221,7 +221,7 @@ public class HTTPRequest
 		}
 		else {
 			try {
-				out.write(toString());
+				out.write(toString().getBytes());
 				int count = 0;
 				while(count<requestDataLength) {
 					int data = dataSource.read();

@@ -1,0 +1,6 @@
+agent_id=111
+classname=com.cometway.om.ObjectManagerService
+file_store_dir=./
+name=FileObjectManager
+om_type=FileObjectManager
+service_name=object_manager

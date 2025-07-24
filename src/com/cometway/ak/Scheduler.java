@@ -116,7 +116,7 @@ public class Scheduler extends ServiceAgent implements IScheduler, IScheduleChan
 	* Method implements IScheduler.schedule().  Given an ISchedulable item,
 	* method adds the item to the Scheduler.
 	*
-	*  @returns true if schedulable is scheduled, false otherwise.
+	*  @return true if schedulable is scheduled, false otherwise.
 	*/
 
 	public boolean schedule(ISchedulable schedulable)
@@ -148,7 +148,7 @@ public class Scheduler extends ServiceAgent implements IScheduler, IScheduleChan
 	* Method implements IScheduler.unschedule().  Given an ISchedulable item,
 	*   method removes that item from the Scheduler.
 	*
-	* @returns true if the schedulable exists in the Scheduler and was
+	* @return true if the schedulable exists in the Scheduler and was
 	*   successfullly unscheduled, false otherwise.
 	*/
 

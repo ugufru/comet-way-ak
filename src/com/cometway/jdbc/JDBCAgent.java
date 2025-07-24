@@ -21,7 +21,7 @@ import java.util.Vector;
 * inserts and updates.
 */
 
-public class JDBCAgent extends Agent
+public class JDBCAgent extends Agent implements JDBCAgentInterface
 {
 	/**
 	* Initializes the Props for this agent:
@@ -86,7 +86,7 @@ public class JDBCAgent extends Agent
 
 	/**
 	* Properly closes the specified Connection. All Connections issued by getConnection should be
-	* closed using this method with they are no longer needed.
+	* closed using this method when they are no longer needed.
 	*/
 	
 	public void closeConnection(Connection connection)
@@ -197,7 +197,7 @@ public class JDBCAgent extends Agent
 	* Properly escapes apostrophes in the String literal for use in an SQL statement.
 	*/
 	
-	private String escapeApostrophes(String value)
+	public static String escapeApostrophes(String value)
 	{
 		int index = value.indexOf('\'');
 
@@ -205,7 +205,7 @@ public class JDBCAgent extends Agent
 		{
 			value = value.substring(0, index) + "''" + value.substring(index + 1, value.length());
 
-			index = value.indexOf('\'');
+			index = value.indexOf('\'',index+2);
 		}
 
 		return (value);
@@ -238,9 +238,17 @@ public class JDBCAgent extends Agent
 
 		try
 		{
-			println("executeQuery: " + sql);
+			if (sql.indexOf("\n") >= 0)
+			{
+				debug("executeQuery:\n" + sql);
+			}
+			else
+			{
+				debug("executeQuery: " + sql);
+			}
 
 			connection = getConnection();
+
 			statement = connection.createStatement();
 
 			ResultSet rs = statement.executeQuery(sql);
@@ -267,7 +275,7 @@ public class JDBCAgent extends Agent
 		}
 		catch (Exception e)
 		{
-			error("executeQuery", e);
+			error("executeQuery: " + sql, e);
 		}
 		finally
 		{
@@ -302,7 +310,14 @@ public class JDBCAgent extends Agent
 
 		try
 		{
-			println("executeUpdate: " + sql);
+			if (sql.indexOf("\n") >= 0)
+			{
+				debug("executeUpdate:\n" + sql);
+			}
+			else
+			{
+				debug("executeUpdate: " + sql);
+			}
 
 //			for (int i = 0; i < 3; i++)
 //			{
@@ -326,7 +341,7 @@ public class JDBCAgent extends Agent
 		}
 		catch (Exception e)
 		{
-			error("executeUpdate", e);
+			error("executeUpdate: " + sql, e);
 		}
 		finally
 		{
@@ -458,7 +473,14 @@ public class JDBCAgent extends Agent
 
 			connection = driver.connect(jdbc_url, p);
 
-			debug("Connection established.");
+			if (connection == null)
+			{
+				error("Could not establish connection.");
+			}
+			else
+			{
+				debug("Connection established.");
+			}
 		}
 		catch (Exception e)
 		{

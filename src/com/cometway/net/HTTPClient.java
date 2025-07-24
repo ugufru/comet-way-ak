@@ -15,7 +15,7 @@ public class HTTPClient
 {
 	public static int readBufferSize = 5120;
 
-	public static HTTPResponse sendRequest(HTTPRequest request, InputStream in, BufferedWriter out, OutputStream dataOut, HTTPLoader loader) throws IOException
+	public static HTTPResponse sendRequest(HTTPRequest request, InputStream in, OutputStream out, OutputStream dataOut, HTTPLoader loader) throws IOException
 	{
 		HTTPResponse    rval = new HTTPResponse();
 		//System.out.println("request: '"+((int)request.toString().charAt(request.toString().length()-4))+","+((int)request.toString().charAt(request.toString().length()-3))+","+((int)request.toString().charAt(request.toString().length()-2))+","+((int)request.toString().charAt(request.toString().length()-1))+"'");
@@ -80,8 +80,7 @@ public class HTTPClient
 				rval.resultCode = "null";
 			}
 		}		
-		//		System.out.println("HEADERS: "+rval.headers);
-
+		
 		if (request.requestType == request.SHORT_GET_REQUEST_TYPE)
 		{
 			rval.data = read(in,dataOut,loader);
@@ -204,10 +203,11 @@ public class HTTPClient
 						line = line+((char)c);
 					}
 					c = in.read();
-				//					System.out.println("DATA = "+c+"  CHAR="+((char)c));
+					//					System.out.println("DATA = "+c+"  CHAR="+((char)c));
 				}
 			}
 			//System.out.println("done");
+
 		}
 		catch (java.io.InterruptedIOException iio)
 		{
@@ -246,10 +246,10 @@ public class HTTPClient
 					int bytesRead = reader.read(buffer);
 					while(bytesRead > 0) {
 					    if(bytesRead == buffer.length) {
-							rval.append(new String(buffer,"iso-8859-1"));
+							rval.append(new String(buffer,loader.charset));
 						}
 						else {
-							rval.append(new String(buffer,0,bytesRead,"iso-8859-1"));
+							rval.append(new String(buffer,0,bytesRead,loader.charset));
 						}
 						bytesRead = reader.read(buffer);
 					}
@@ -338,7 +338,7 @@ public class HTTPClient
 
 					if (bytesread > 0)
 					{
-						out.append(new String(rval, 0, bytesread, "iso-8859-1"));
+						out.append(new String(rval, 0, bytesread, loader.charset));
 						
 						count = count + bytesread;
 					}
@@ -426,6 +426,10 @@ public class HTTPClient
 		StringBuffer    valueBuffer;
 		char		theChar;
 		char		theChar2;
+
+		if(in==null) {
+			return(null);
+		}
 
 		buffer = new StringBuffer();
 		valueBuffer = new StringBuffer(in);

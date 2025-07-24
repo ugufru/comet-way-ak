@@ -1,0 +1,362 @@
+
+<HTML>
+<HEAD>
+<TITLE>Agent Kernel Demos</TITLE>
+<STYLE>
+	A:link {text-decoration: none; font-weight: bold }
+	A:visited {text-decoration: none; font-weight: bold }
+	A:hover {text-decoration: underline; font-weight: bold }
+	H2, H3, H4, H5 { font-family: helvetica }
+	IMG { border: 0 }
+	TT, PRE { font-family: monaco,lucida console,courier }
+	UL { list-style-type: square }
+</STYLE>
+</HEAD>
+<BODY BGCOLOR='#ffffff' LINK='#003399' VLINK='#003399' ALINK='#ff0000'>
+
+<P ALIGN='right'><A href="../README.html">Contents</A></P>
+
+<H2>
+Agent Kernel Demos
+</H2>
+<UL>
+<LI><A HREF='#app_loader'>App Loader</A>
+<LI><A HREF='#biolife'>BioLife</A>
+<LI><A HREF='#demo_service'>Demo Service</A>
+<LI><A HREF='#directory_scanner'>Directory Scanner</A>
+<LI><A HREF='#email'>Email</A>
+<LI><A HREF='#helloworld'>Hello World</A>
+<LI><A HREF='#lightbox_demo'>Lightbox Demo</A>
+<LI><A HREF='#monitors'>Monitors</A>
+<LI><A HREF='#object_manager'>Object Manager</A>
+<LI><A HREF='#replicator'>Replicator</A>
+<LI><A HREF='#reporters'>Reporters</A>
+<LI><A HREF='#robot'>Robot Demo</A>
+<LI><A HREF='#sample_agent'>Sample Agent</A>
+<LI><A HREF='#scheduler'>Scheduler</A>
+<LI><A HREF='#sessions'>Sessions</A>
+<LI><A HREF='#system_properties'>System Properties</A>
+<LI><A HREF='#webserver'>Webserver</A>
+<LI><A HREF='#xml_weather'>XML Weather Demo</A>
+</UL>
+
+
+In order to run these demo agents, you must use the command console. Go to the demo subdirectory of the demo you want to run and type <TT>ak</TT> in the command console.
+
+For those of you not fimilar with using the command console, we will step you thorugh the WebServer Demo beacuse it is easy and impressive.
+
+<P>
+
+<BLOCKQUOTE>
+	<A NAME='webserver'><H3>Webserver</H3></A>
+	
+		This demo starts a webserver on your machine and serves documentation and demos of the Comet Way Web Application Server.
+		Open the command prompt console (usually located in the Acceseries Folder in Program Files). Type the following command to change to the correct directory.
+	<P>
+    
+	<TABLE width="95%" bgColor=#222222><TBODY>
+    <TR><TD><FONT color=#dddddd><PRE>	
+[~/ak] % cd  ak/demos/webserver
+[~/ak/demos/webserver] % _
+	</PRE></FONT>
+	</TD></TR>
+	</TBODY></TABLE>
+<P>
+
+Once you are in the webserver directory, type <TT>ak</TT>.
+You should see a lot of output on your screen that looks similiar to this:
+<P>
+    <TABLE width="95%" bgColor=#222222><TBODY>
+    <TR><TD><FONT color=#dddddd><PRE>
+[AK] Comet Way Agent Kernel 2.1.2 10-31-2003
+[000_AgentKernel] Starting on 2003/10/30 17:08:05.580 EST
+[000_AgentKernel] Creating agent com.cometway.xml.XMLStartupAgent
+[001_XMLStartupAgent] Starting on 2003/10/30 17:08:05.600 EST
+[001_XMLStartupAgent] Loading agents from ak.xstartup
+[000_AgentKernel] Creating agent com.cometway.ak.ServiceManager
+[100_ServiceManager] Starting on 2003/10/30 17:08:05.811 EST
+[000_AgentKernel] Creating agent com.cometway.io.FileLoggerAgent
+[110_FileLoggerAgent] Starting on 2003/10/30 17:08:05.831 EST
+[100_ServiceManager] Registered com.cometway.io.FileLoggerAgent as logger_agent
+[000_AgentKernel] Creating agent com.cometway.httpd.LogViewerPage
+[120_LogViewerPage] Starting on 2003/10/30 17:08:05.891 EST
+[120_LogViewerPage] Log Maps: {Total requests=GET, Site hits=GET / }
+[100_ServiceManager] Registered com.cometway.httpd.LogViewerPage as /logviewer.a
+gent
+[000_AgentKernel] Creating agent com.cometway.httpd.HTTPFileServerAgent
+[120_LogViewerPage] Looking through file: .\logs\httpd_access.00002
+[130_HTTPFileServerAgent] Starting on 2003/10/30 17:08:05.951 EST
+[100_ServiceManager] Registered com.cometway.httpd.HTTPFileServerAgent as HTTPFi
+leServerAgent
+[120_LogViewerPage] Looking through file: .\logs\httpd_access.00001
+[120_LogViewerPage] Looking through file: .\logs\httpd_access.00000
+[120_LogViewerPage] sleeping
+[000_AgentKernel] Creating agent com.cometway.httpd.HTTPRedirectAgent
+[140_HTTPRedirectAgent] Starting on 2003/10/30 17:08:06.181 EST
+[100_ServiceManager] Registered com.cometway.httpd.HTTPRedirectAgent as http_red
+irect.agent
+?[1m(140_HTTPRedirectAgent) Redirect Hash:
+[/distributed]
+     => server1.cometway.com   is up (true)
+     => server2.cometway.com   is up (true)
+[/cometway]
+     => http://www.cometway.com   is up (true)
+[/]
+     => /index.html   is up (true)
+?[0m
+[000_AgentKernel] Creating agent com.cometway.httpd.HTTPProxyAgent
+[150_HTTPProxyAgent] Starting on 2003/10/30 17:08:06.271 EST
+[100_ServiceManager] Registered com.cometway.httpd.HTTPProxyAgent as http_proxy.
+agent
+[000_AgentKernel] Creating agent com.cometway.httpd.HTTPAuthenticationAgent
+[160_HTTPAuthenticationAgent] Starting on 2003/10/30 17:08:06.441 EST
+[100_ServiceManager] Registered com.cometway.httpd.HTTPAuthenticationAgent as ht
+tp_authentication.agent
+?[1m(160_HTTPAuthenticationAgent) HeadNode: / (null)
+dir1 (null)
+subdir2 (D1 Subdir 2 REALM)
+dir2 (null)
+subdir3 (D2 Subdir 3 REALM)
+subdir4 (D3 Subdir 4 REALM)
+
+REALMHASH:
+  /dir1/subdir2/=D1 Subdir 2 REALM
+  /dir2/subdir3/subdir4/=D3 Subdir 4 REALM
+  /dir2/subdir3/=D2 Subdir 3 REALM
+  user1=user1pass
+USERHASH:
+  D3 Subdir 4 REALM={user5=user5pass, masteruser2=qazmko}
+  D1 Subdir 2 REALM={masteruser2=qazmko, superuser=superuserpass}
+  D2 Subdir 3 REALM={user4=user4pass, masteruser1=qazmko, user3=user3pass}
+  user1pass={masteruser1=qazmko, user2=user2pass}?[0m
+[000_AgentKernel] Creating agent com.cometway.httpd.HTTPPutAgent
+[170_HTTPPutAgent] Starting on 2003/10/30 17:08:06.522 EST
+[100_ServiceManager] Registered com.cometway.httpd.HTTPPutAgent as put_agent
+[000_AgentKernel] Creating agent com.cometway.httpd.WebServer
+[180_WebServer] Starting on 2003/10/30 17:08:06.572 EST
+[180_WebServer] Logging requests to: 110_FileLoggerAgent
+[180_WebServer] Comet Way Web Server 2.1.2 10-31-2003
+[180_WebServer] Starting WebServer and listening on port 8000...
+[180_WebServer] Server bound successfully.
+[000_AgentKernel] Creating agent com.cometway.httpd.SecureWebServer
+[190_SecureWebServer] Starting on 2003/10/30 17:08:06.642 EST
+[190_SecureWebServer] Logging requests to: 110_FileLoggerAgent
+[190_SecureWebServer] Comet Way Secure Web Server 2.1.2 10-31-2003
+[000_AgentKernel] Creating agent SimplePage
+[190_SecureWebServer] Starting WebServer and listening on port 8001...
+[400_SimplePage] Starting on 2003/10/30 17:08:06.692 EST
+[100_ServiceManager] Registered SimplePage as /simple.agent
+[000_AgentKernel] Creating agent SimplePage
+[405_SimplePage] Starting on 2003/10/30 17:08:06.802 EST
+[100_ServiceManager] Registered SimplePage as /custom.agent
+[000_AgentKernel] Creating agent FormDemoPage
+[410_FormDemoPage] Starting on 2003/10/30 17:08:06.852 EST
+[100_ServiceManager] Registered FormDemoPage as /formdemo.agent
+[000_AgentKernel] Creating agent PhonePage
+[420_PhonePage] Starting on 2003/10/30 17:08:06.902 EST
+[100_ServiceManager] Registered PhonePage as /phone.agent
+[000_AgentKernel] Creating agent SnoopPage
+[440_SnoopPage] Starting on 2003/10/30 17:08:07.573 EST
+[100_ServiceManager] Registered SnoopPage as /snoop.agent
+[190_SecureWebServer] Server bound successfully.
+
+	</PRE></FONT>
+	</TD></TR>
+	</TBODY></TABLE>
+<P>
+
+ Open your webrowser and go to <A HREF='http://localhost:8000'>http://localhost:8000</A>. You should see a web page which is being served from your machine. The SSL version is at <A HREF='http://localhost:8001'>http://localhost:8001</A>.
+</BLOCKQUOTE>
+
+
+<BLOCKQUOTE>
+	<A NAME='app_loader'><H3>App Loader</H3></A>
+	<BLOCKQUOTE>
+		This is a demo of how to load an external Java application from within the Agent Kernel.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+	<A NAME='biolife'><H3>BioLife</H3></A>
+	<BLOCKQUOTE>
+		This demo is a bilological simulation of life using agents. <A HREF="biolife/outline.html"> Notes for this demo are here. </A>
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+	<A NAME='demo_service'><H3>Demo Service</H3></A>
+	<BLOCKQUOTE>
+		This is a demonstration of the Service Manager.
+		First the DemoService registers itself with the Service Manager.
+		Next the DemoServiceClient uses the Service Manager to lookup a reference to the DemoService
+		so it call call its run method.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+	<A NAME='directory_scanner'><H3>Directory Scanner</H3></A>
+	<BLOCKQUOTE>
+		This agent scans a directory for new and updated files based on their file date.
+		It uses the scheduler to wakeup every 15 seconds.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<BLOCKQUOTE>
+	<A NAME='email'><H3>Email</H3></A>
+	<BLOCKQUOTE>
+		This demo retrieves email from a POP3 email box, sends email through a SMTP server,
+		auto-replys to ReceiveEmailAgent at the specified POP3 sever.
+		Before this demo will work correctly, these startup files will need to be edited
+		to reflect your preferred (functional) email settings.
+		To edit the staerup files using the Agent Browser, open a command prompt to the
+		email subdirectory and enter <TT>AB</TT> command.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<BLOCKQUOTE>
+	<A NAME='helloworld'><H3>Hello World</H3></A>
+	<BLOCKQUOTE>
+		This is the simplest agent we could write. It demonstrates how to write, configure, and run an agent.
+		This demo simiply prints out the string "Hello World" to the console.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+	<A NAME='lightbox_demo'><H3>Lightbox Demo</H3></A>
+	<BLOCKQUOTE>
+		This demo illustrates the agent's use of the Swing API. This demo pops up a window containing a grid
+		of colored lights turning on and off.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<BLOCKQUOTE>
+	<A NAME='monitors'><H3>Monitors</H3></A>
+	<BLOCKQUOTE>
+		This demo outputs relative memory and CPU usage within the Agent Kernel to the console.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<BLOCKQUOTE>
+	<A NAME='object_manager'><H3>Object Manager</H3></A>
+	<BLOCKQUOTE>
+		This is a demo of the object mananger.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<BLOCKQUOTE>
+	<A NAME='replicator'><H3>Replicator</H3></A>
+	<BLOCKQUOTE>
+		This demo creates five copies of the HelloWorldAgent.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<BLOCKQUOTE>
+	<A NAME='reporters'><H3>Reporters</H3></A>
+	<BLOCKQUOTE>
+There are variety of different Reporters that can be used with the Agent Kernel.
+Some Reporters can be specified as option for the AK command, and others have
+to be started as Agents.
+		<P>
+		To disable agent output completely:
+		<BR><TT>  ak -reporter null 200_SampleAgent.agent</TT>
+		<BR>
+		<BR>To view the output in a VT100 console, the VT100ConsoleReporter highlights debug messages in bold. Warnings and errors are inversed.
+		<BR><TT>  ak -reporter com.cometway.io.VT100ConsoleReporter 200_SampleAgent.agent </TT>
+		<BR>
+		<BR>Send output to log files using the FileReporter:
+		<BR><TT>  ak 100_FileReporter.agent 200_SampleAgent.agent</TT>
+		<P>
+		Reporters can be written to manage and route agent output in any number
+		of methods that are appropriate. It is definitely possible to write your own
+		Reporter Agents that log activity to a database or TCP/IP connection if desired.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+	<A NAME='robot'><H3>Robot</H3></A>
+	<BLOCKQUOTE>
+	This demo takes control of your mouse.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+	<A NAME='sample_agent'><H3>Sample Agent</H3></A>
+	<BLOCKQUOTE>
+		This demonstrates some of the more common agent methods such as println, debug, warning, and error methods,
+		as well as some examples of using the agent Props to store and retrieve data.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<BLOCKQUOTE>
+	<A NAME='scheduler'><H3>Scheduler</H3></A>
+	<BLOCKQUOTE>
+		This demo shows how to write an agent that uses the Scheduler to wakeup every 2 seconds.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<BLOCKQUOTE>
+	<A NAME='sessions'><H3>Sessions</H3></A>
+	<BLOCKQUOTE>
+		In this demo, an ObjectCache is started along with a SessionManager to provide
+		a session management service. The Scheduler wakes up the SessionTest every 5 seconds
+		which uses the SessionManager to create a session ID. The SessionReaper is scheduled
+		to remove sessions that have been dormant for 30 seconds.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<BLOCKQUOTE>
+	<A NAME='system_properties'><H3>System Properties</H3></A>
+	<BLOCKQUOTE>
+		This demo prints the java.lang.System properties to the console.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+	<A NAME='xml_weather'><H3>XML Weather Demo</H3></A>
+	<BLOCKQUOTE>
+	A demo on an XML webserver. This is a webservice that retreives the weather online and reports the results back in XML.
+	You must have an Internet connection for this demo is run successfully. Once you start the demo, go to 
+	<A HREF="xml_weather\index.html">xml_weather\index</A> on your local machine.
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<TABLE WIDTH="100%"><TR>
+<TD VALIGN='top'>
+<FONT SIZE='-1'>
+Copyright &copy; 1999-2002, Comet Way, Inc.<BR>
+</FONT>
+</TD>
+<TD ALIGN='right'><A href="http://www.cometway.com"><IMG src="..\docs\cometway140.gif" border=0><A></A></TD>
+</TR></TABLE>
+<BLOCKQUOTE></BLOCKQUOTE>
+<BLOCKQUOTE></BLOCKQUOTE>
+
+</BODY>
+</HTML>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

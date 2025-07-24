@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<props_list>
+	<props>
+		<agent_id>100</agent_id>
+		<classname>com.cometway.ak.ServiceManager</classname>
+		<name>ServiceManager</name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>110</agent_id>
+		<allow_directory_lists>no</allow_directory_lists>
+		<classname>com.cometway.httpd.HTTPFileServerAgent</classname>
+		<default_index>index.html</default_index>
+		<html_directory>./</html_directory>
+		<name>HTTPFileServerAgent</name>
+		<service_name>HTTPFileServerAgent</service_name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>120</agent_id>
+		<bind_port>8000</bind_port>
+		<classname>com.cometway.httpd.WebServer</classname>
+		<log_requests>true</log_requests>
+		<name>WebServer</name>
+		<socket_linger_time>2000</socket_linger_time>
+		<startup>true</startup>
+		<thread_pool_timeout>20000</thread_pool_timeout>
+		<use_inet_address_methods>false</use_inet_address_methods>
+	</props>
+	<props>
+		<agent_id>130</agent_id>
+		<classname>WeatherXMLRequestAgent</classname>
+		<name>WeatherXMLRequestAgent</name>
+		<startup>true</startup>
+	</props>
+</props_list>

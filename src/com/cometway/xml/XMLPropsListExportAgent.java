@@ -3,6 +3,7 @@ package com.cometway.xml;
 
 
 import com.cometway.ak.Agent;
+import com.cometway.ak.AK;
 import com.cometway.props.Props;
 import com.cometway.props.PropsList;
 import com.cometway.props.PropsException;
@@ -14,6 +15,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.Serializable;
 import java.io.Writer;
 import java.text.DateFormat;
 import java.util.Collections;
@@ -73,6 +75,10 @@ public class XMLPropsListExportAgent extends Agent
 
 				saveToFile(filename, v);
 			}
+		}
+		catch (PropsException e)
+		{
+			error("Could not save database", e.getOriginalException());
 		}
 		catch (Exception e)
 		{
@@ -160,10 +166,23 @@ public class XMLPropsListExportAgent extends Agent
 
 	protected void write(Writer out, List propsList) throws IOException
 	{
-		String containerStart = '<' + getString("container_tag") + '>';
-		String containerEnd = "</" + getString("container_tag") + '>';
-		String propsStart = '<' + getString("props_tag") + '>';
-		String propsEnd = "</" + getString("props_tag") + '>';
+		String container_tag = getString("container_tag");
+		String props_tag = getString("props_tag");
+
+		writePropsList(out, propsList, container_tag, props_tag);
+	}
+
+
+	/**
+	* User this method to write a PropsList as XML to a Writer.
+	*/
+
+	public static void writePropsList(Writer out, List propsList, String containerTag, String propsTag) throws IOException
+	{
+		String containerStart = '<' + containerTag + '>';
+		String containerEnd = "</" + containerTag + '>';
+		String propsStart = '<' + propsTag + '>';
+		String propsEnd = "</" + propsTag + '>';
 
 		out.write(XML.XML_10_HEADER);
 		out.write(EOL);
@@ -198,15 +217,22 @@ public class XMLPropsListExportAgent extends Agent
 					String key = (String) keys.get(x);
 					Object value = p.getProperty(key);
 
-					out.write("\t\t<");
-					out.write(key);
-					out.write('>');
-
-					if ((value instanceof String) || (value instanceof Integer) || (value instanceof Boolean))
+					if ((value instanceof String) || (value instanceof Number) || (value instanceof Boolean))
 					{
 						String s = p.getString(key);
-						out.write(XML.encode(s));
+
+						s = XML.encode(s);
+
+						out.write("\t\t<");
+						out.write(key);
+						out.write('>');
+						out.write(s);
+						out.write("</");
+						out.write(key);
+						out.write('>');
+						out.write(EOL);
 					}
+
 					else if (value instanceof Date)
 					{
 // Someday we might want to make these UTC formatted dates with decimal seconds.
@@ -214,24 +240,39 @@ public class XMLPropsListExportAgent extends Agent
 
 						String s = DateTools.toISO8601String(p.getDate(key));
 
+						out.write("\t\t<");
+						out.write(key);
+						out.write('>');
 						out.write("<date>");
 						out.write(s);
 						out.write("</date>");
+						out.write("</");
+						out.write(key);
+						out.write('>');
+						out.write(EOL);
 					}
-					else
+
+					else if (value instanceof Serializable)
 					{
 						byte[] data = ObjectSerializer.serialize(value);
 						String s = Base64Encoding.encode(data);
 
+						out.write("\t\t<");
+						out.write(key);
+						out.write('>');
 						out.write("<base64>");
 						out.write(s);
 						out.write("</base64>");
+						out.write("</");
+						out.write(key);
+						out.write('>');
+						out.write(EOL);
 					}
 
-					out.write("</");
-					out.write(key);
-					out.write('>');
-					out.write(EOL);
+					else
+					{
+AK.getDefaultReporter().warning("XMLPropsListExportAgent.writePropsList", "Property \"" + key + "\" (" + value.getClass().getName() + ") is not serializable and was not written.");
+					}
 				}
 
 				out.write('\t');

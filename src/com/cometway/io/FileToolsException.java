@@ -31,7 +31,7 @@ public class FileToolsException extends Exception
 	/**
 	* Constructor for this exception.
 	* @param message Message associated with this exception.
-	* @param originalException The original exception associated with this exception.
+	* @param cause The original exception associated with this exception.
 	*/
 
 	public FileToolsException(String message, Exception cause)

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<props_list>
+	<props>
+		<agent_classname>ReplicateMe</agent_classname>
+		<agent_id>100</agent_id>
+		<classname>com.cometway.ak.AgentReplicator</classname>
+		<name>AgentReplicator</name>
+		<number_of_agents>5</number_of_agents>
+		<startup>true</startup>
+	</props>
+</props_list>

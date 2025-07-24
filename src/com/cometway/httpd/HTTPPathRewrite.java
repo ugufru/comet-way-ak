@@ -9,7 +9,7 @@ import com.cometway.ak.*;
 import com.cometway.util.jGrep;
 import com.cometway.util.Pair;
 
-import org.apache.oro.text.perl.Perl5Util;
+import java.util.regex.Pattern;
 
 /**
  * This WebServerExtension reads in a file of match and replace pairs, separated
@@ -29,7 +29,7 @@ import org.apache.oro.text.perl.Perl5Util;
 public class HTTPPathRewrite extends WebServerExtension
 {
 	Vector pairs;
-	Perl5Util cache;
+	// No longer needed - Pattern compilation is done on demand
 
 	public void initProps()
 	{
@@ -43,14 +43,12 @@ public class HTTPPathRewrite extends WebServerExtension
 	public void start()
 	{
 		readMatchFile();
-		cache = new Perl5Util();
 
 		super.start();
 	}
 
 	public void stop()
 	{
-		cache = null;
 		pairs = null;
 	}
 
@@ -91,12 +89,76 @@ public class HTTPPathRewrite extends WebServerExtension
 			String match = (String)((Pair)pairs.elementAt(x)).first();
 			String replace = (String)((Pair)pairs.elementAt(x)).second();
 
-			newPath = jGrep.grepAndReplaceText(match,replace,path,false,cache);
+			newPath = jGrep.grepAndReplaceText(match,replace,path,false);
 			if(!path.equals(newPath)) {
+				if(newPath.indexOf("?")!=-1) {
+					setCGIParams(newPath.substring(newPath.indexOf("?")+1),request);
+					newPath = newPath.substring(0,newPath.indexOf("?"));
+				}
 				request.setProperty("path",newPath);
 				break;
 			}
 		}
 		return(false);
+	}
+
+
+	protected void setCGIParams(String params, HTTPAgentRequest request)
+	{
+		int i = params.indexOf("&");
+		while(i!=-1) {
+			String tmp = params.substring(0,i);
+			params = params.substring(i+1);
+			
+			i = tmp.indexOf("=");
+			if(i!=-1) {
+				String property = HTMLStringTools.decode(tmp.substring(0,i));
+				if(request.hasProperty(property)) {
+					Object o = request.getProperty(property);
+					if(o instanceof Vector) {
+						((Vector)o).addElement(HTMLStringTools.decode(tmp.substring(i+1)));
+					}
+					else {
+						Vector v = new Vector();
+						v.addElement(o);
+						v.addElement(HTMLStringTools.decode(tmp.substring(i+1)));
+						request.setProperty(property,v);
+					}
+				}
+				else {
+					request.setProperty(property,HTMLStringTools.decode(tmp.substring(i+1)));
+				}
+			}
+			else {
+				request.setProperty(HTMLStringTools.decode(tmp)," ");
+			}
+			
+			i = params.indexOf("&");
+		}
+		if(params.length()>0) {
+			i = params.indexOf("=");
+			
+			if(i!=-1) {
+				String property = HTMLStringTools.decode(params.substring(0,i));
+				if(request.hasProperty(property)) {
+					Object o = request.getProperty(property);
+					if(o instanceof Vector) {
+						((Vector)o).addElement(HTMLStringTools.decode(params.substring(i+1)));
+					}
+					else {
+						Vector v = new Vector();
+						v.addElement(o);
+						v.addElement(HTMLStringTools.decode(params.substring(i+1)));
+						request.setProperty(property,v);
+					}
+				}
+				else {
+					request.setProperty(HTMLStringTools.decode(params.substring(0,i)),HTMLStringTools.decode(params.substring(i+1)));
+				}
+			}
+			else {
+				request.setProperty(HTMLStringTools.decode(params)," ");
+			}
+		}
 	}
 }

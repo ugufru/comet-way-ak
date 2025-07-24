@@ -1,0 +1,4 @@
+agent_id=101
+classname=com.cometway.ak.Scheduler
+name=Scheduler
+service_name=scheduler

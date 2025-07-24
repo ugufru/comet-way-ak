@@ -1,0 +1,3 @@
+agent_id=100
+classname=com.cometway.ak.ServiceManager
+name=ServiceManager

@@ -16,8 +16,8 @@ import com.cometway.props.Props;
 
 public class HTMLFormWriter
 {
-	private StringBuffer buffer;
-	private AgentRequest agentRequest;
+	protected StringBuffer buffer;
+	protected AgentRequest agentRequest;
 
 
 	/**
@@ -38,15 +38,25 @@ public class HTMLFormWriter
 	{
 		this.buffer = b;
 	}
-	
-	
+
+
+	/**
+	* Returns the AgentRequest assigned to this FormWriter.
+	*/
+
+	public AgentRequest getAgentRequest()
+	{
+		return (agentRequest);
+	}
+
+		
 	/**
 	* Converts the integer to a String and writes it to the output.
 	*/
 	
 	public void print(int i) throws IOException
 	{
-		print((new Integer(i)).toString());
+		print(Integer.toString(i));
 	}
 
 
@@ -73,7 +83,7 @@ public class HTMLFormWriter
 
 	public void println(int i) throws IOException
 	{
-		println((new Integer(i)).toString());
+		println(Integer.toString(i));
 	}
 
 
@@ -92,6 +102,31 @@ public class HTMLFormWriter
 			buffer.append(s + "\n");
 		}
 	}
+
+	/**
+	* Writes three menus on the same line to represent month, date, and year for choosing a date.
+	*/
+
+	public void writeAddressFields(String name, Props p, int size) throws IOException
+	{
+		String city = p.getString(name + "_city");
+		String state = p.getString(name + "_state");
+		String zip = p.getString(name + "_zip");
+
+		writeMultilineField("Address", name + "_street", p, size, 3);
+		
+		println(" <TR>");
+		println("  <TD ALIGN=RIGHT>City:</TD>\n");
+		println("  <TD NOWRAP><INPUT name=\"" + name + "_city" + "\" value=\"" + encode(city) + "\" size=" + size + ">");
+		println(" State: <SELECT name=\"" + name + "_state\">");
+		
+		writeStateSelectItems(state);
+
+		println("</SELECT>");
+		println(" Zip:<INPUT name=\"" + name + "_zip" + "\" value=\"" + encode(zip) + "\" size=\"7\">");
+		println("  </TD></TR>");
+	}
+
 
 
 	/**
@@ -139,6 +174,76 @@ public class HTMLFormWriter
 		{
 			println("<TD VALIGN=BOTTOM><INPUT type=CHECKBOX name=\"" + encode(name) + "\"></TD>\n</TR>");
 		}
+	}
+
+
+	/**
+	* Writes three menus on the same line to represent month, date, and year for choosing a date.
+	*/
+
+	public void writeDateFields(String label, String name, Props p) throws IOException
+	{
+		println("<TR>\n<TD ALIGN=RIGHT>" + label + ":</TD>\n<TD NOWRAP>");
+
+
+		// Figure out what year, month, and day to display in the OPTIONS.
+
+		Calendar cal = Calendar.getInstance();
+		int lastYear = cal.get(cal.YEAR) + 5;
+		Date d = p.getDate(name);
+
+		if (d != null) cal.setTime(d);
+
+		int year = cal.get(cal.YEAR);
+		int month = cal.get(cal.MONTH);
+		int day = cal.get(cal.DATE);
+
+
+		// Write the SELECT and OPTION tags for month.
+
+		println("<SELECT name=\"" + name + "_month\">");
+
+		writeSelectItem("Jan", 0, month);
+		writeSelectItem("Feb", 1, month);
+		writeSelectItem("Mar", 2, month);
+		writeSelectItem("Apr", 3, month);
+		writeSelectItem("May", 4, month);
+		writeSelectItem("Jun", 5, month);
+		writeSelectItem("Jul", 6, month);
+		writeSelectItem("Aug", 7, month);
+		writeSelectItem("Sep", 8, month);
+		writeSelectItem("Oct", 9, month);
+		writeSelectItem("Nov", 10, month);
+		writeSelectItem("Dec", 11, month);
+
+		println("</SELECT>");
+
+
+		// Write the SELECT and OPTION tags for day.
+
+		println("<SELECT name=\"" + name + "_day\">");
+
+		for (int i = 1; i <= 31; i++)
+		{
+			writeSelectItem("" + i, i, day);
+		}
+
+		println("</SELECT>");
+
+
+		// Write the SELECT and OPTION tags for year.
+
+		println("<SELECT name=\"" + name + "_year\">");
+
+		for (int i = 1895; i <= lastYear; i++)
+		{
+			writeSelectItem("" + i, i, year);
+		}
+
+		println("</SELECT>");
+
+
+		println("</TD>");
 	}
 
 
@@ -230,6 +335,17 @@ public class HTMLFormWriter
 
 
 	/**
+	* Writes a FILE input field to the form output displaying the specified value.
+	*/
+	
+	public void writeFileUpload(String label, String name) throws IOException
+	{
+		println("<TR>\n<TD ALIGN=RIGHT NOWRAP>" + label + ":</TD>");
+		println("<TD><INPUT type=\"FILE\" name=\"" + name + "\"></TD>\n</TR>");
+	}
+
+
+	/**
 	* Writes a hidden input parameter to the form output.
 	*/
 	
@@ -290,10 +406,10 @@ public class HTMLFormWriter
 	
 	public void writeMultilineField(String label, String name, String value, int columns, int rows) throws IOException
 	{
-		if (rows < 3)
-		{
-			rows = 3;	// Avoids IE 4.01 Mac crashing problem.
-		}
+//		if (rows < 3)
+//		{
+//			rows = 3;	// Avoids IE 4.01 Mac crashing problem.
+//		}
 
 		println("<TR>\n<TD ALIGN=RIGHT NOWRAP>" + label + ":</TD>");
 		println("<TD><TEXTAREA name=\"" + name + "\" cols=" + columns + " rows=" + rows + ">" + encode(value) + "</TEXTAREA></TD>\n</TR>");
@@ -424,7 +540,7 @@ public class HTMLFormWriter
 
 
 	/**
-	* Writes a SELECT OPTION to the form output. If the name is equal to the currentSelection
+	* Writes a SELECT OPTION to the form output. If the value is equal to the currentSelection
 	* the item is selected; otherwise it is not selected. Calls to this method must be
 	* surrounded by calls to writeSelectHeader and writeSelectFooter.
 	*/
@@ -434,6 +550,171 @@ public class HTMLFormWriter
 		writeSelectItem(name, value, currentSelection.equals(value));
 	}
 
+
+	/**
+	* Writes a SELECT OPTION to the form output. If the value is equal to the currentSelection
+	* the item is selected; otherwise it is not selected. Calls to this method must be
+	* surrounded by calls to writeSelectHeader and writeSelectFooter.
+	*/
+	
+	public void writeSelectItem(String name, int value, int currentSelection) throws IOException
+	{
+		writeSelectItem(name, "" + value, (currentSelection == value));
+	}
+
+
+	/**
+	* Writes a list of SELECT OPTIONs to the form output based on the specified Props List.
+	*/
+	
+	public void writeSelectItemList(String label, String name, List propsList, String nameKey, String valueKey, String currentValue) throws IOException
+	{
+		writeSelectHeader(label, name, false);
+
+		int count = propsList.size();
+
+		for (int i = 0; i < count; i++)
+		{
+			Props p = (Props) propsList.get(i);
+			String title = p.getTrimmedString(nameKey);
+			String value = p.getTrimmedString(valueKey);
+
+			writeSelectItem(title, value, currentValue);
+		}
+
+		writeSelectFooter();
+	}
+
+
+	/**
+	* Writes a SELECT and OPTIONS for selecting a US state code.
+	*/
+
+	public void writeSelectUSState(String label, String name, String value) throws IOException
+	{
+		writeSelectHeader(label, name, false);
+		writeStateSelectItems(value);
+		writeSelectFooter();
+	}
+
+
+	/**
+	* Writes select items for all 50 US states.
+	*/
+
+	public void writeStateSelectItems(String state) throws IOException
+	{
+		if (true)
+		{
+			writeSelectItem("-", "-", false);
+			writeSelectItem("AL", "AL", state);
+			writeSelectItem("AK", "AK", state);
+			writeSelectItem("AR", "AR", state);
+			writeSelectItem("AZ", "AZ", state);
+			writeSelectItem("CA", "CA", state);
+			writeSelectItem("CO", "CO", state);
+			writeSelectItem("CT", "CT", state);
+			writeSelectItem("DE", "DE", state);
+			writeSelectItem("DC", "DC", state);
+			writeSelectItem("FL", "FL", state);
+			writeSelectItem("GA", "GA", state);
+			writeSelectItem("HI", "HI", state);
+			writeSelectItem("IA", "IA", state);
+			writeSelectItem("ID", "ID", state);
+			writeSelectItem("IL", "IL", state);
+			writeSelectItem("IN", "IN", state);
+			writeSelectItem("KS", "KS", state);
+			writeSelectItem("KY", "KY", state);
+			writeSelectItem("LA", "LA", state);
+			writeSelectItem("MA", "MA", state);
+			writeSelectItem("MD", "MD", state);
+			writeSelectItem("ME", "ME", state);
+			writeSelectItem("MI", "MI", state);
+			writeSelectItem("MN", "MN", state);
+			writeSelectItem("MO", "MO", state);
+			writeSelectItem("MS", "MS", state);
+			writeSelectItem("MT", "MT", state);
+			writeSelectItem("NC", "NC", state);
+			writeSelectItem("ND", "ND", state);
+			writeSelectItem("NE", "NE", state);
+			writeSelectItem("NH", "NH", state);
+			writeSelectItem("NJ", "NJ", state);
+			writeSelectItem("NM", "NM", state);
+			writeSelectItem("NV", "NV", state);
+			writeSelectItem("NY", "NY", state);
+			writeSelectItem("OH", "OH", state);
+			writeSelectItem("OK", "OK", state);
+			writeSelectItem("OR", "OR", state);
+			writeSelectItem("PA", "PA", state);
+			writeSelectItem("RI", "RI", state);
+			writeSelectItem("SC", "SC", state);
+			writeSelectItem("SD", "SD", state);
+			writeSelectItem("TN", "TN", state);
+			writeSelectItem("TX", "TX", state);
+			writeSelectItem("UT", "UT", state);
+			writeSelectItem("VA", "VA", state);
+			writeSelectItem("VT", "VT", state);
+			writeSelectItem("WA", "WA", state);
+			writeSelectItem("WI", "WI", state);
+			writeSelectItem("WV", "WV", state);
+			writeSelectItem("WY", "WY", state);
+		}
+		else
+		{
+			writeSelectItem("AL - Alabama", "AL", state);
+			writeSelectItem("AK - Alaska", "AK", state);
+			writeSelectItem("AR - Arkansas", "AR", state);
+			writeSelectItem("AZ - Arizona", "AZ", state);
+			writeSelectItem("CA - California", "CA", state);
+			writeSelectItem("CO - Colorado", "CO", state);
+			writeSelectItem("CT - Connecticut", "CT", state);
+			writeSelectItem("DE - Delaware", "DE", state);
+			writeSelectItem("DC - Washington DC", "DC", state);
+			writeSelectItem("FL - Florida", "FL", state);
+			writeSelectItem("GA - Georgia", "GA", state);
+			writeSelectItem("HI - Hawaii", "HI", state);
+			writeSelectItem("IA - Iowa", "IA", state);
+			writeSelectItem("ID - Idaho", "ID", state);
+			writeSelectItem("IL - Illinois", "IL", state);
+			writeSelectItem("IN - Indiana", "IN", state);
+			writeSelectItem("KS - Kansas", "KS", state);
+			writeSelectItem("KY - Kentucky", "KY", state);
+			writeSelectItem("LA - Louisiana", "LA", state);
+			writeSelectItem("MA - Massachusetts", "MA", state);
+			writeSelectItem("MD - Maryland", "MD", state);
+			writeSelectItem("ME - Maine", "ME", state);
+			writeSelectItem("MI - Michigan", "MI", state);
+			writeSelectItem("MN - Minnesota", "MN", state);
+			writeSelectItem("MO - Missouri", "MO", state);
+			writeSelectItem("MS - Mississippi", "MS", state);
+			writeSelectItem("MT - Montana", "MT", state);
+			writeSelectItem("NC - North Carolina", "NC", state);
+			writeSelectItem("ND - North Dakota", "ND", state);
+			writeSelectItem("NE - Nebraska", "NE", state);
+			writeSelectItem("NH - New Hampshire", "NH", state);
+			writeSelectItem("NJ - New Jersey", "NJ", state);
+			writeSelectItem("NM - New Mexico", "NM", state);
+			writeSelectItem("NV - Nevada", "NV", state);
+			writeSelectItem("NY - New York", "NY", state);
+			writeSelectItem("OH - Ohio", "OH", state);
+			writeSelectItem("OK - Oklahoma", "OK", state);
+			writeSelectItem("OR - Oregon", "OR", state);
+			writeSelectItem("PA - Pennsylvania", "PA", state);
+			writeSelectItem("RI - Rhode Island", "RI", state);
+			writeSelectItem("SC - South Carolina", "SC", state);
+			writeSelectItem("SD - South Dakota", "SD", state);
+			writeSelectItem("TN - Tennessee", "TN", state);
+			writeSelectItem("TX - Texas", "TX", state);
+			writeSelectItem("UT - Utah", "UT", state);
+			writeSelectItem("VA - Virginia", "VA", state);
+			writeSelectItem("VT - Vermont", "VT", state);
+			writeSelectItem("WA - Washington", "WA", state);
+			writeSelectItem("WI - Wisconsin", "WI", state);
+			writeSelectItem("WV - West Virginia", "WV", state);
+			writeSelectItem("WY - Wyoming", "WY", state);
+		}
+	}
+	
 
 	/**
 	* Writes a static text field to the form output.

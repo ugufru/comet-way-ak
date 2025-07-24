@@ -57,32 +57,45 @@ public abstract class Agent extends Props implements AgentInterface
 	* the Props methods to be accessible directly from other agent methods.
 	* @deprecated use the getProps method if you need a Props reference.
 	*/
+	
 	protected Props props;
+	
 	/** This is a reference to the AgentController assigned to this agent. */
+	
 	protected AgentControllerInterface agentController;
+	
 	/**
 	* This is where the agent_id is cached for use by the toString method.
 	*/
+	
 	protected String agent_id;
+	
 	/**
 	* This is a reference to the Reporter assigned to this agent for println output.
 	* If this field is null, the println method will be ignored.
 	*/
+	
 	protected ReporterInterface printlnReporter;
+	
 	/**
 	* This is a reference to the Reporter assigned to this agent for debug output.
 	* If this field is null, the debug method will be ignored.
 	*/
+	
 	protected ReporterInterface debugReporter;
+	
 	/**
 	* This is a reference to the Reporter assigned to this agent for warning output.
 	* If this field is null, the warning methods will be ignored.
 	*/
+	
 	protected ReporterInterface warningReporter;
+	
 	/**
 	* This is a reference to the Reporter assigned to this agent for error output.
 	* If this field is null, the error methods will be ignored.
 	*/
+	
 	protected ReporterInterface errorReporter;
 
 
@@ -348,10 +361,10 @@ public abstract class Agent extends Props implements AgentInterface
 		Object serviceImpl = null;
 		ServiceManagerInterface serviceManager = AK.getDefaultServiceManager();
 
-                if (serviceManager == null)
-                { 
-                        error("Service Manager is not loaded");
-                }
+		if (serviceManager == null)
+		{ 
+			error("Service Manager is not loaded");
+		}
 		else
 		{
 			serviceImpl = serviceManager.getServiceImpl(service_name, null);
@@ -385,6 +398,22 @@ public abstract class Agent extends Props implements AgentInterface
 		{
 			error("attempt to register zero length service_name");
 		}
+	}
+
+
+	/**
+	* Use this method to send agent requests to  RequestAgents.
+	*/
+
+	protected void sendAgentRequest(AgentRequest request) throws Exception
+	{
+		String service_name = request.getTrimmedString("service_name");
+
+		RequestAgentInterface agent = (RequestAgentInterface) getServiceImpl(service_name);
+
+		debug("Sending request to " + service_name + " (" + agent.getClass().getName() + ")\n" + request);
+
+		agent.handleRequest(request);
 	}
 
 
@@ -442,7 +471,7 @@ public abstract class Agent extends Props implements AgentInterface
 
 	public static String getDateTimeStr()
 	{
-			return (SDF.format(new Date()));
+		return (SDF.format(new Date()));
 	}
 }
 

@@ -1,0 +1,14 @@
+## These jdbc parameters work for the MM.MySQL type 4 jdbc 
+## driver available from http://mmmysql.sourceforge.net/
+
+agent_id=403
+classname=com.cometway.jdbc.JDBCAgent
+hide_debug=false
+hide_println=false
+hide_warning=false
+jdbc_driver=org.gjt.mm.mysql.Driver
+jdbc_url=jdbc:mysql://[hostname]:[port]/[dbname]
+jdbc_user=username
+jdbc_password=password
+name=JDBCAgent
+service_name=jdbc_agent

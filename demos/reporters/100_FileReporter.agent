@@ -1,0 +1,5 @@
+agent_id=100
+classname=com.cometway.io.FileReporter
+log_file_prefix=reporter_
+logs_per_file=100
+name=FileReporter

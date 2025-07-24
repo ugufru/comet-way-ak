@@ -1,0 +1,3 @@
+agent_id=122
+classname=com.cometway.reporting.FileReporter
+name=FileReporter

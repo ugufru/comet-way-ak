@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<props_list>
+	<props>
+		<agent_id>100</agent_id>
+		<classname>SampleAgent</classname>
+		<name>SampleAgent</name>
+		<startup>true</startup>
+	</props>
+</props_list>

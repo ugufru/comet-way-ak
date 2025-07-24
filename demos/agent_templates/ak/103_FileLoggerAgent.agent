@@ -1,0 +1,5 @@
+agent_id=103
+classname=com.cometway.ak.FileLoggerAgent
+log_file_prefix=logger_agent
+logs_per_file=10000
+name=FileLoggerAgent

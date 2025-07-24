@@ -7,6 +7,7 @@ import com.cometway.jdbc.JDBCConnection;
 import com.cometway.props.Props;
 import com.cometway.props.PropsException;
 import com.cometway.props.PropsList;
+import com.cometway.util.ObjectSerializer;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,6 +20,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Vector;
+import javax.sql.rowset.serial.SerialBlob;
+
 
 
 /**
@@ -35,6 +38,7 @@ public class JDBCExportAgent extends PooledJDBCAgent
 	final static protected String INT = "int";
 	final static protected String DOUBLE = "double";
 	final static protected String DATETIME = "datetime";
+	final static protected String BINARY = "binary";
 
 	final static protected SimpleDateFormat SQL_SDF = new SimpleDateFormat("MM/dd/yyyy");
 
@@ -137,7 +141,6 @@ public class JDBCExportAgent extends PooledJDBCAgent
 	{
 		String database_name = getString("database_name");
 
-
 		int fieldCount = from_fields.size();
 		PropsList database = (PropsList) getServiceImpl(database_name);
 		List v = database.listProps();
@@ -170,10 +173,39 @@ public class JDBCExportAgent extends PooledJDBCAgent
 				}
 				else if (type.equals(DATETIME))
 				{
-//					Date d = SQL_SDF.parse(p.getString(key));
-//					java.sql.Date sd = new java.sql.Date(d.getTime());
-//					statement.setDate(x + 1, sd);
-					statement.setString(x + 1, p.getString(key));
+					Object o = p.getProperty(key);
+
+					if (o instanceof Date)
+					{
+						Date d = (Date) o;
+						java.sql.Date sd = new java.sql.Date(d.getTime());
+						statement.setDate(x + 1, sd);
+					}
+					else
+					{
+						statement.setString(x + 1, p.getString(key));
+					}
+				}
+				else if (type.equals(BINARY))
+				{
+					Object o = p.getProperty(key);
+
+					if (o instanceof byte[])
+					{
+						statement.setBlob(x + 1, new SerialBlob((byte[]) o));
+					}
+					else
+					{
+						try
+						{
+							statement.setBlob(x + 1, new SerialBlob(ObjectSerializer.serialize(o)));
+						}
+						catch (Exception e)
+						{
+							error("Cannot serialize property '" + key + "' into SerialBlob", e);
+						}
+					}
+
 				}
 				else
 				{

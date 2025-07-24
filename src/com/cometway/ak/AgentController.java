@@ -27,8 +27,11 @@ public class AgentController extends Props implements AgentControllerInterface
 	private final static String DESTROYING_STATE = "destroying";
 	private final static String DESTROYED_STATE = "destroyed";
 
+
+	/** The Agent instance this controller is attached to. */
+
 	private Agent agent;
-	private StateMachineModelInterface sm;
+	private StateMachineModelInterface stateMachine;
 
 
 	/**
@@ -39,10 +42,15 @@ public class AgentController extends Props implements AgentControllerInterface
 	public AgentController(AgentInterface agent)
 	{
 		this.agent = (Agent) agent;
-		this.sm = agent.getStateMachineModel();
+
+		this.stateMachine = agent.getStateMachineModel();
+
 		agent.setAgentController(this);
+
 		setPropsContainer(agent.getProps().getPropsContainer());
+
 		setProperty("next_state", CREATING_STATE);
+
 		waitForState(STOPPED_STATE);
 	}
 
@@ -80,7 +88,9 @@ public class AgentController extends Props implements AgentControllerInterface
 		if (current_state.equals(STOPPED_STATE))
 		{
 			agent.println("Starting on " + Agent.getDateTimeStr());
+
 			setProperty("next_state", STARTING_STATE);
+
 			waitForState(RUNNING_STATE);
 
 			setBoolean("started", true); // for backwards compatibility
@@ -107,7 +117,9 @@ public class AgentController extends Props implements AgentControllerInterface
 			setBoolean("started", false); // for backwards compatibility
 
 			agent.println("Stop requested on " + Agent.getDateTimeStr());
+
 			setProperty("next_state", STOPPING_STATE);
+
 			waitForState(STOPPED_STATE);
 		}
 		else
@@ -130,6 +142,7 @@ public class AgentController extends Props implements AgentControllerInterface
 		if (current_state.equals(STOPPED_STATE))
 		{
 			setProperty("next_state", DESTROYING_STATE);
+
 			waitForState(DESTROYED_STATE);
 		}
 		else
@@ -167,6 +180,7 @@ public class AgentController extends Props implements AgentControllerInterface
 			if (next_state == null)
 			{
 //				agent.debug("exiting waitForState: next state is null");
+
 				break;
 			}
 			else if (current_state.equals(waitState))
@@ -176,6 +190,7 @@ public class AgentController extends Props implements AgentControllerInterface
 			else if (next_state.equals(DESTROYED_STATE))
 			{
 //				agent.debug("exiting waitForState: final state reached");
+
 				break;
 			}
 			else
@@ -196,11 +211,12 @@ public class AgentController extends Props implements AgentControllerInterface
 	{
 		String next_state = null;
 
-		StateModelInterface state = sm.getStateModel(stateName);
+		StateModelInterface state = stateMachine.getStateModel(stateName);
 		CommandInterface[] commands = state.getCommands();
 		TransitionInterface[] transitions = state.getTransitions();
 
 //		agent.debug(stateName);
+
 		setProperty("current_state", stateName);
 
 		/* Execute the commands */
@@ -218,6 +234,7 @@ public class AgentController extends Props implements AgentControllerInterface
 				catch (CommandException e)
 				{
 					next_state = FAILED_STATE;
+
 					agent.error("CommandException", e.getOriginalException());
 				}
 			}
@@ -241,6 +258,7 @@ public class AgentController extends Props implements AgentControllerInterface
 					catch (TransitionException e)
 					{
 						next_state = FAILED_STATE;
+
 						agent.error("Exception", e);
 					}
 		
@@ -253,6 +271,7 @@ public class AgentController extends Props implements AgentControllerInterface
 		}
 
 		setProperty("next_state", next_state);
+
 //		agent.debug("> Exiting state: " + stateName + " (next state: " + next_state + ')');
 	
 		return (next_state);

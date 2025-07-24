@@ -13,7 +13,7 @@ public interface IMessage
 	/**
 	* getHeaderInfo returns the value of the header associated with key, if any
 	* @param key the header name to be extracted
-	* @returns the header text associated with key, if any
+	* @return the header text associated with key, if any
 	*/
 
 	public String getHeaderInfo(String key);
@@ -21,7 +21,7 @@ public interface IMessage
 
 	/**
 	* getHeaders yields an Enumeration of header keys associated with an IMessage
-	* @returns an Enumeration of header keys
+	* @return an Enumeration of header keys
 	*/
 
 	public Enumeration getHeaders();
@@ -29,7 +29,7 @@ public interface IMessage
 
 	/**
 	* getMessage returns the message body of an IMessage
-	* @returns the message body of an IMessage
+	* @return the message body of an IMessage
 	*/
 
 	public String getMessage();

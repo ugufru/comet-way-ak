@@ -1,0 +1,307 @@
+
+<HTML>
+<HEAD>
+<TITLE>Comet Way Agent Kernel 2.1.2 10-31-2003</TITLE>
+<STYLE>
+	A:link {text-decoration: none; font-weight: bold }
+	A:visited {text-decoration: none; font-weight: bold }
+	A:hover {text-decoration: underline; font-weight: bold }
+	H2, H3, H4 { font-family: helvetica }
+	IMG { border: 0 }
+	TT, PRE { font-family: monaco,lucida console,courier }
+	UL { list-style-type: square }
+</STYLE>
+</HEAD>
+<BODY BGCOLOR='#FFFFFF' LINK='#003399' VLINK='#003399' ALINK='#FF0000'>
+
+<P ALIGN='RIGHT'><A HREF='../README.html'>Contents</A></P>
+
+<H2>
+Installation Instructions for UNIX
+</H2>
+
+<BLOCKQUOTE>
+
+<A NAME='BeforeInstall'><H3>Before You Install</H3></A>
+
+<BLOCKQUOTE>
+Proper installation of the Comet Way Agent Kernel requires a working knowledge of the
+Java platform upon which it will be deployed. Instructions in this document
+are generic in nature, but refer specifically to most common UNIX based
+implementations of the JDK. In most cases, you will need to be able to answer
+the following Java-related questions:
+<P>
+
+<H4><INPUT TYPE='CHECKBOX'> Where is Java installed?</H4>
+<BLOCKQUOTE>
+You will need to know this if you are using JDK 1.1.x, or find that the JDK
+tools need to be added to your PATH. If Java is not installed at all, you can
+begin by downloading one of the available reference implementations by visiting
+the <A HREF='http://java.sun.com/j2se/downloads.html'>J2SE Downloads Page</A>
+on the java.sun.com website.
+</BLOCKQUOTE>
+
+<H4><INPUT TYPE='CHECKBOX'> Are the JDK tools on your PATH?</H4>
+<BLOCKQUOTE>
+For convenience sake, it is a good idea to have the JDK tools directory on your PATH.
+<I>If you know where Java is installed</I>, you will find the JDK tools in the bin/
+subdirectory. Some implementations of UNIX (ie: Solaris, SuSE, Mac OS X) may have this
+setup by default.
+</BLOCKQUOTE>
+   
+<H4><INPUT TYPE='CHECKBOX'> Is your Java CLASSPATH set?</H4>
+<BLOCKQUOTE>
+If you are using JDK 1.1.x you may need to set your CLASSPATH environment variable to
+include the standard Java classes. <I>If you know where Java is installed</I>, you will
+need to add the lib/classes.zip file to your CLASSPATH. With JDK 1.2 and higher this is
+no longer necessary.
+</BLOCKQUOTE>
+
+<H4><INPUT TYPE='CHECKBOX'> Do you know how to use the java and javac tools?</H4>
+<BLOCKQUOTE>
+It is essential to understand how to use java and javac if you are going to write Java
+agents in a command line environment like UNIX.
+</BLOCKQUOTE>
+
+<P>
+If you are unexperienced with Java development in general, we highly recommend
+reading the first three chapters of <I>Java In A Nutshell</I>, published
+by O'Reilly. This book contains most of the necessary information critical
+to learning how to write, compile, and execute applications written in the Java
+language.
+
+</BLOCKQUOTE>
+
+<A NAME='ReleaseContents'><H3>Installation Instructions</H3></A>
+<BLOCKQUOTE>
+
+<H4><INPUT TYPE='CHECKBOX'> Check the download file size</H4>
+<BLOCKQUOTE>
+	After you have finished downloading the tar.gz archive from
+	<A HREF='http://www.cometway.com/downloads'>Comet Way Downloads</A>,
+	check the file size to make sure the file has downloaded completely.
+</BLOCKQUOTE>
+
+<H4><INPUT TYPE='CHECKBOX'> Decompress the tar.gz archive</H4>
+<BLOCKQUOTE>
+	From the UNIX command line, decompress the tar.gz archive into the
+	location where you intend to install Comet Way Agent Kernel.
+	<P>
+<TABLE BGCOLOR='#000000'><TR><TD>
+<FONT COLOR='#99FF99'><PRE>
+[mario:~] % ls
+ak-02-11-2002.tar.gz
+[mario:~] % gunzip ak-02-11-2002.tar.gz 
+[mario:~] % tar xf ak-02-11-2002.tar 
+[mario:~] % ls
+ak                ak-02-11-2002.tar
+[mario:~] % _                                                  </PRE></FONT>
+</TD></TR></TABLE>
+	<P>
+	<I>Most modern UNIX implementations also support</I> tar xfz
+	<I>which does the</I> gunzip <I>and</I> tar xf <I>in one step,
+	leaving the original tar.gz file intact.</I>
+</BLOCKQUOTE>
+
+<H4><INPUT TYPE='CHECKBOX'> Remove the downloaded file (optional)</H4>
+<BLOCKQUOTE>
+	To conserve disk space, you may delete the download-related archives
+	from the file system.
+	<P>
+<TABLE BGCOLOR='#000000'><TR><TD>
+<FONT COLOR='#99FF99'><PRE>
+[mario:~] % rm ak-02-11-2002.tar
+[mario:~] % _                                                  </PRE></FONT>
+</TD></TR></TABLE>
+</BLOCKQUOTE>
+
+<H4><INPUT TYPE='CHECKBOX'> Run the install.sh script</H4>
+<BLOCKQUOTE>
+	We have provided a simple installation script that:
+	<OL>
+		<LI>Creates a <TT>~/bin</TT> directory (if you don't have one).
+		<LI>Creates a <TT>~/classes</TT> directory (if you don't have one).
+		<LI>Creates the <TT>~/bin/jc</TT> script.
+		<LI>Creates the <TT>~/bin/ak</TT> script.
+		<LI>Creates the <TT>~/bin/ab</TT> script.
+		<LI>Copies the demo classes to your class repository (~/classes).
+	</OL>
+	<P>
+<TABLE BGCOLOR='#000000'><TR><TD>
+<FONT COLOR='#99FF99'><PRE>
+[mario:~] % cd ak
+[mario:~/ak] % ls
+LICENSE.html ak.jar       classes      docs         install.sh   src
+README.html  bin          demos        import       javadocs
+[mario:~/ak] % ./install.sh 
+Installing Comet Way Agent Kernel Scripts
+Creating /Users/mario/bin directory
+Creating /Users/mario/classes directory
+Creating /Users/mario/bin/jc
+Creating /Users/mario/bin/ak
+Creating /Users/mario/bin/ab
+Copying Demo classes to /Users/mario/classes
+[mario:~/ak] % _                                                  </PRE></FONT>
+</TD></TR></TABLE>
+</BLOCKQUOTE>
+
+<A NAME='installer_script'><H4><INPUT TYPE='CHECKBOX'>Test the Agent Kernel</H4></A>
+<BLOCKQUOTE>
+	OK, now it's time to see if the Agent Kernel is installed properly.
+	The Agent Kernel can be started from any directory by issuing the
+	<TT>ak</TT> command. If you are using csh, tcsh, or zsh you will first
+	need to rehash your command completion buffer by using the <TT>rehash</TT>
+	shell command.
+	<P>
+<TABLE BGCOLOR='#000000'><TR><TD>
+<FONT COLOR='#99FF99'><PRE>
+[mario:~/ak] % rehash
+[mario:~/ak] % ak
+[AK] Comet Way Agent Kernel 2.1.2 10-31-2003
+[000_AgentKernel] Starting on 2003/10/30 17:28:49.573 EST
+[000_AgentKernel] Creating agent com.cometway.xml.XMLStartupAgent
+[001_XMLStartupAgent] Starting on 2003/10/30 17:28:49.603 EST
+[001_XMLStartupAgent] Loading agents from ak.xstartup
+[001_XMLStartupAgent] Loading agents from .
+[mario:~/ak] % _                                                      </PRE></FONT>
+</TD></TR></TABLE>
+	<P>
+	<I>Note: You do not need to use the 'rehash' command unless you are using a
+	csh shell variant. Common csh variants are tcsh and zsh.</I>
+	<P>
+	You can issue the <TT>ak</TT> command in any directory that contains .startup
+	files. Try issuing the <TT>ak</TT> command in the <TT>demos/hello_world</TT> directory.
+	<P>
+<TABLE BGCOLOR='#000000'><TR><TD>
+<FONT COLOR='#99FF99'><PRE>
+[mario:~/ak] % cd demos/hello_world
+[mario:~/ak/demos/hello_world] % ak
+[AK] Comet Way Agent Kernel 2.1.2 10-31-2003
+[000_AgentKernel] Starting on 2003/10/30 17:30:36.187 EST
+[000_AgentKernel] Creating agent com.cometway.xml.XMLStartupAgent
+[001_XMLStartupAgent] Starting on 2003/10/30 17:30:36.207 EST
+[001_XMLStartupAgent] Loading agents from ak.xstartup
+[000_AgentKernel] Creating agent HelloWorldAgent
+[100_HelloWorldAgent] Starting on 2003/10/30 17:30:36.337 EST
+[100_HelloWorldAgent] Hello, world!
+[mario:~/ak] % _                                                   </PRE></FONT>
+</TD></TR></TABLE>
+	<P>
+	If you follow the output displayed in your console, you can see the the
+	XMLStartupAgent found an .xstartup file in current dir called ak.xstartup.
+	It then created and started the HelloWorldAgent. The HelloWorldAgent
+	outputs the message &quot;Hello, world!&quot;.
+	<P>
+	Now try some of the other <A HREF='../demos/index.html'>demos</A>!!!
+	
+</BLOCKQUOTE>
+
+</BLOCKQUOTE>
+
+<A NAME='ReleaseContents'><H3>Contents of This Release</H3></A>
+
+<BLOCKQUOTE>
+
+This release contains the following files and directories:
+<P>
+<TABLE BGCOLOR='#FFFFFF' CELLSPACING='0' CELLPADDING='8' BORDER='1' BORDERCOLOR='#6699CC'>
+<TR>
+	<TD><A HREF='../README.html'><TT>README.html</TT></A></TD>
+	<TD>Primary documentation and table of contents for this releease.</TD>
+</TR>
+
+<TR>
+	<TD><A HREF='../LICENSE.html'><TT>LICENSE.html</TT></A></TD>
+	<TD>This contains the open source license for Comet Way Agent Kernel.</TD>
+</TR>
+
+<TR>
+	<TD><TT>ak.jar</TT></TD>
+        <TD>This Java Archive (JAR file) contains all of the classes necessary
+        to compile and run any of the kernel, web, or email agents. It does not
+        contain classes for any of the examples; they must be compiled 
+        separately.</TD>
+</TR>   
+
+<TR>
+	<TD><TT>install.sh</TT></TD>
+        <TD>This <A HREF='#installer_script'>installer script</A> can be used
+	to setup the Comet Way Agent Kernel for use in your home directory.</TD>
+</TR>   
+
+<TR>
+	<TD><TT>bin/</TT></TD>
+	<TD>Contains UNIX shell scripts for recompiling the ak.jar
+	file and creating javadocs, a script for compiling individual Java classes
+	to a class repository (jc), a tool for starting the Agent Kernel (ak),
+	and a Swing-based tool for browsing and changing agent startup configurations (ab).
+	</TD>
+</TR>
+
+<TR>
+	<TD><TT>classes/</TT></TD>
+	<TD>This is a class repository containing class files for the demos.</TD>
+</TR>
+
+<TR>
+	<TD><A HREF='../demos/index.html'><TT>demos/</TT></A></TD>
+	<TD>Contains agent code examples and their associated Props files.</TD>
+</TR>
+
+<TR>
+	<TD><TT>docs/</TT></TD>
+	<TD>Contains HTML-based documentation about the Comet Way Agent Kernel.</TD>
+</TR>
+
+<TR>
+	<TD><TT>import/</TT></TD>
+	<TD>Contains 3rd party open source libraries that are used by the
+	agents.</TD>
+</TR>
+
+<TR>
+	<TD><A HREF='../javadocs/index.html'><TT>javadocs/</TT></A></TD>
+	<TD>Complete HTML-based documentation for all of the classes in this
+	release.</TD>
+</TR>
+
+<TR>
+	<TD><A HREF='../src/'><TT>src/</TT></A></TD>
+	<TD>Contains the complete Java source code for the kernel, web, and
+	email, and other agents in this release.</TD>
+</TR>
+</TABLE>
+</BLOCKQUOTE>
+
+</BLOCKQUOTE>
+
+<HR>
+
+<TABLE WIDTH='100%'><TR>
+<TD VALIGN='TOP'>
+<FONT SIZE='-1'>
+Copyright &copy; 1999-2003, Comet Way, Inc.<BR>
+</FONT>
+</TD>
+<TD ALIGN='RIGHT'><A HREF='http://www.cometway.com'><IMG SRC='cometway140.gif' BORDER='0'><A/></TD>
+</TR></TABLE>
+
+</BODY>
+</HTML>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

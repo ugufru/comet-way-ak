@@ -14,7 +14,7 @@ import java.util.Vector;
 * or used externally with associated Import and Export agents.
 */
 
-public class PropsList
+public class PropsList implements PropsListInterface
 {
 	protected final Object[] synchObject = new Object[0];
 	protected List propsList = new Vector();
@@ -345,6 +345,39 @@ public class PropsList
 		Collections.sort(propsList, new PropsComparator(key));
 
 		return (propsList);
+	}
+
+
+	/**
+	* Updates all Props with matching key and value using the specificed Props.
+	* Returns true if Props were found and updated; false otherwise.
+	*/
+
+	public boolean updateProps(Props p, String key, Object value)
+	{
+		boolean result = false;
+
+		synchronized (synchObject)
+		{
+			int count = propsList.size();
+
+			while (count > 0)
+			{
+				count--;
+
+				Props pp = (Props) propsList.get(count);
+				Object pValue = pp.getProperty(key);
+
+				if ((pValue != null) && (pValue.equals(value)))
+				{
+					pp.copyFrom(p);
+					dirty = true;
+					result = true;
+				}
+			}
+		}
+
+		return (result);
 	}
 
 

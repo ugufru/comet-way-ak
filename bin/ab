@@ -1,8 +1,6 @@
 #! /bin/sh
 
 # This is a shell script for starting the Comet Way Agent Browser.
-# You may need to change the classpath if you are using Java 1.x
-# or have installed the Agent Kernel into a different location.
 
-CLASSPATH=~/ak/classes:~/ak/ak.jar
+CLASSPATH=${HOME}/classes:${HOME}/ak/ak.jar
 java -classpath ${CLASSPATH} com.cometway.ak.AK -startup_agent com.cometway.swing.StartupEditor

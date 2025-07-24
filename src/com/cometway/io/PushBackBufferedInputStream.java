@@ -30,7 +30,7 @@ import java.io.*;
  * the Thread will continue to block until PushBackBufferedInputStream.close() is called.
  *
  * @see java.io.BufferedInputStream
- * @see java.io.PushBackInputStream
+ * see also java.io.PushBackInputStream
  */
 public class PushBackBufferedInputStream extends InputStream implements Runnable
 {

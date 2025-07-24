@@ -1,0 +1,3 @@
+agent_id=120
+classname=com.cometway.reporting.DevNullReporter
+name=DevNullReporter

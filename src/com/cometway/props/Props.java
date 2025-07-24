@@ -15,6 +15,7 @@ import java.io.FileWriter;
 import java.text.DateFormat;
 import java.text.MessageFormat;
 import java.text.ParseException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
@@ -32,7 +33,6 @@ import java.util.Vector;
 
 public class Props
 {
-	private final static DateFormat ISO8601_DATEFORMAT = DateTools.ISO8601_DATEFORMAT;
 	private final static String EOL = System.getProperty("line.separator");
 
 	private IPropsContainer container;
@@ -56,7 +56,7 @@ public class Props
 
 	/**
 	* Creates a new Props based on a given IPropsContainer.
-	* @param c a reference to an IPropsContainer.
+	* @param container a reference to an IPropsContainer.
 	* @see IPropsContainer
 	*/
 
@@ -116,11 +116,23 @@ public class Props
 
 	private void appendPropsContainer(StringBuffer b, String key, IPropsContainer pc, int level)
 	{
+		List keys = new Vector();
 		Enumeration e = pc.enumerateProps();
 
 		while (e.hasMoreElements())
 		{
 			String k = (String) e.nextElement();
+
+			keys.add(k);
+		}
+
+		Collections.sort(keys);
+
+		int count = keys.size();
+
+		for (int keyIndex = 0; keyIndex < count; keyIndex++)
+		{
+			String k = (String) keys.get(keyIndex);
 			Object o = pc.getProperty(k);
 			String classname = "null";
 
@@ -342,7 +354,11 @@ public class Props
 			for (int i = 0; i < keyCount; i++)
 			{
 				String keyName = (String) keyList.get(i);
-				arguments[i] = getProperty(keyName);
+				Object o = getProperty(keyName);
+
+				if (o == null) o = "";
+
+				arguments[i] = o;
 
 				String key = "\\{" + keyName;
 				String idx = "\\{" + Integer.toString(i);
@@ -379,11 +395,16 @@ public class Props
 				return (((Boolean) o).booleanValue());
 			}
 
+			if (o instanceof Integer)
+			{
+				return (((Integer) o).intValue() != 0);
+			}
+
 			if (o instanceof String)
 			{
-				String  s = o.toString();
+				String s = o.toString();
 
-				return (s.equalsIgnoreCase("true") || s.equalsIgnoreCase("on") || s.equalsIgnoreCase("yes") || s.equalsIgnoreCase("Y") || s.equalsIgnoreCase("T"));
+				return (s.equalsIgnoreCase("true") || s.equalsIgnoreCase("on") || s.equalsIgnoreCase("yes") || s.equalsIgnoreCase("Y") || s.equalsIgnoreCase("T") || s.equals("1"));
 			}
 		}
 
@@ -471,7 +492,7 @@ public class Props
 
 				if (o instanceof String)
 				{
-					return (ISO8601_DATEFORMAT.parse((String) o));
+					return (DateTools.parseISO8601String((String) o));
 				}
 			}
 		}
@@ -833,7 +854,7 @@ public class Props
 				{
 					if ((value instanceof Boolean) == false)
 					{
-						value = new Boolean(getBoolean(key));
+						value = Boolean.valueOf(getBoolean(key));
 					}
 				}
 
@@ -843,7 +864,7 @@ public class Props
 				{
 					if ((value instanceof Integer) == false)
 					{
-						value = new Integer(getInteger(key));
+						value = Integer.valueOf(getInteger(key));
 					}
 				}
 
@@ -1072,7 +1093,7 @@ public class Props
 	* Inserts property String values into the passed string where property
 	* names are surrounded by angle brackets.
 	* @param str a String containing text with with property names surrounded by angle brackets.
-	* @returns a String with the property names replaced by their values.
+	* @return a String with the property names replaced by their values.
 	*/
 
 	public String insertProps(String str)
@@ -1248,7 +1269,7 @@ public class Props
 	* Passing a null IPropsChangeLister will result in the notification of
 	* all registered listeners; the same as notifyPropsChanged.
 	* @param key the property that has changed.
-	* @param l a reference to an IPropsChangeListener.
+	* @param ignore a reference to an IPropsChangeListener.
 	*/
 
 	public void notifyPropsChangedIgnore(String key, IPropsChangeListener ignore)
@@ -1282,8 +1303,8 @@ public class Props
 	* to all registered IPropsChangeListeners, except the one passed.
 	* Passing a null IPropsChangeLister will result in the notification of
 	* all registered listeners; the same as notifyPropsChanged.
-	* @param key the property that has changed.
-	* @param l a reference to an IPropsChangeListener.
+	* @param changedKeys a String array containing the names of keys that have changed.
+	* @param ignore a reference to an IPropsChangeListener.
 	*/
 
 	public void notifyPropsChangedIgnore(String changedKeys[], IPropsChangeListener ignore)
@@ -1493,7 +1514,7 @@ public class Props
 
 	public void setBoolean(String key, boolean value)
 	{
-		container.setProperty(key, new Boolean(value));
+		container.setProperty(key, Boolean.valueOf(value));
 		notifyPropsChanged(key);
 	}
 
@@ -1534,7 +1555,7 @@ public class Props
 
 	public void setDouble(String key, double value)
 	{
-		container.setProperty(key, new Double(value));
+		container.setProperty(key, Double.valueOf(value));
 		notifyPropsChanged(key);
 	}
 
@@ -1547,7 +1568,7 @@ public class Props
 
 	public void setFloat(String key, float value)
 	{
-		container.setProperty(key, new Float(value));
+		container.setProperty(key, Float.valueOf(value));
 		notifyPropsChanged(key);
 	}
 
@@ -1560,7 +1581,7 @@ public class Props
 
 	public void setInteger(String key, int value)
 	{
-		container.setProperty(key, new Integer(value));
+		container.setProperty(key, Integer.valueOf(value));
 		notifyPropsChanged(key);
 	}
 
@@ -1573,7 +1594,7 @@ public class Props
 
 	public void setLong(String key, long value)
 	{
-		container.setProperty(key, new Long(value));
+		container.setProperty(key, Long.valueOf(value));
 		notifyPropsChanged(key);
 	}
 
@@ -1602,7 +1623,7 @@ public class Props
 	/**
 	* Sets the property value for key to the value retrieved using the same key from srcProps.
 	* @param key the name of the property to set.
-	* @param value a reference to an Object.
+	* @param srcProps the specified property value is retrived from this Props.
 	*/
 
 	public void setProperty(String key, Props srcProps)
@@ -1614,7 +1635,8 @@ public class Props
 	/**
 	* Sets the property value for key to the value retrieved using srcKey from srcProps.
 	* @param key the name of the property to set.
-	* @param value a reference to an Object.
+	* @param srcProps the specified property value is retrieved from this Props.
+	* @param srcKey this key is used to retrieve a property value from srcProps, which is usually different from key.
 	*/
 
 	public void setProperty(String key, Props srcProps, String srcKey)

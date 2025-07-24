@@ -1,0 +1,14 @@
+## These jdbc parameters work with the PostgreSQL JDBC driver
+## available from http://jdbc.postgresql.org/
+
+agent_id=405
+classname=com.cometway.jdbc.JDBCAgent
+hide_debug=false
+hide_println=false
+hide_warning=false
+jdbc_driver=org.postgresql.Driver
+jdbc_url=jdbc:postgresql://[host]:[port]/[dbname]
+jdbc_user=username
+jdbc_password=password
+name=JDBCAgent
+service_name=jdbc_agent

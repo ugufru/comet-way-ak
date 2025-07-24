@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<props_list>
+	<props>
+		<agent_id>100</agent_id>
+		<classname>com.cometway.ak.ServiceManager</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>ServiceManager</name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>200</agent_id>
+		<classname>com.cometway.ak.Scheduler</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>Scheduler</name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>300</agent_id>
+		<classname>ScheduledDemo</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>ScheduledDemo</name>
+		<schedule>between 0:0:0-23:59:59 every 2s</schedule>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_classname>ScheduledDemo2</agent_classname>
+		<agent_id>400</agent_id>
+		<classname>com.cometway.ak.ScheduledAgent</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>ScheduledDemo2</name>
+		<schedule>between 0:0:0-23:59:59 every 5s</schedule>
+		<startup>true</startup>
+	</props>
+</props_list>

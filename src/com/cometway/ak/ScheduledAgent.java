@@ -12,7 +12,7 @@ import com.cometway.util.Schedule;
 /**
 * Implementation of a scheduled agent.
 * Subclass this agent and override the wakeup method that is called as
-* specified by the schedule property. 
+* specified by the schedule property.
 * Creates and uses a Schedule as specified by the schedule property.
 */
 
@@ -103,7 +103,7 @@ public class ScheduledAgent extends Agent implements ISchedulable
 
 		if (schedule == null)
 		{
-			warning("This agent did not need to be unscheduled.");
+//			warning("This agent did not need to be unscheduled.");
 		}
 		else
 		{

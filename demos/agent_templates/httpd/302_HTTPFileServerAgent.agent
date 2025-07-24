@@ -1,0 +1,9 @@
+agent_id=302
+allow_directory_lists=yes
+classname=com.cometway.httpd.HTTPFileServerAgent
+default_index=index.html
+hide_debug=false
+hide_println=false
+hide_warning=false
+html_directory=./html/
+name=HTTPFileServerAgent

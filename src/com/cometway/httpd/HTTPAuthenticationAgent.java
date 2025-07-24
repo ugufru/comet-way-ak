@@ -10,9 +10,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.OutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.UUID;
 import java.util.Vector;
 
 
@@ -143,7 +147,7 @@ public class HTTPAuthenticationAgent extends WebServerExtension
 {
 	protected final static String DEFAULT_HOME = "default";
 	protected Hashtable hosts;
-
+	protected DigestAuthenticationTracker digests;
     
 	/**
 	* Initializes properties for this agent: "service_name" is the
@@ -157,6 +161,12 @@ public class HTTPAuthenticationAgent extends WebServerExtension
 		setDefault("service_name","extension://.*");
 		setDefault("webserver_service_name","none");
 		setDefault("domains","none");
+
+		// This can be set to "digest" or anything else. "digest" will cause this extension to use DIGEST authentication
+		setDefault("authentication_type","digest");
+
+		// This is the timeout of a DIGEST authenticated session. This only applies when "digest" is set. This cannot be zero or negative.
+		setDefault("digest_timeout","3600000");  // default 1 hour
 	
 		setDefault("authentication_files", "./http.authentication");
 	}
@@ -170,6 +180,11 @@ public class HTTPAuthenticationAgent extends WebServerExtension
 		for (int x = 0; x < authFiles.length; x++)
 		{
 			readAuthenticationFile(authFiles[x]);
+		}
+
+		if(getString("authentication_type").equalsIgnoreCase("digest")) {
+			digests = new DigestAuthenticationTracker();
+			digests.start();
 		}
 
 		super.start();
@@ -260,9 +275,20 @@ public class HTTPAuthenticationAgent extends WebServerExtension
 	* Tests to see if path is Authenticated.
 	*/
     
-	public boolean isAuthenticated(String path, String hostname)
+	public boolean isAuthenticated(AgentRequest request, String path, String hostname)
 	{
 		debug("isAuthenticated: " + path + " " + hostname);
+
+		// we need to update the nonce count if there is one if this is set to digest.
+		if(getString("authentication_type").equalsIgnoreCase("digest")) {
+			String authorization = request.getString("http_headers:authorization");
+			if(authorization.toLowerCase().startsWith("digest")) {
+				String opaque = digests.parseField("opaque",authorization);
+				if(opaque!=null) {
+					digests.incrementCount(opaque);
+				}
+			}
+		}
 
 		hostname = hostname.toLowerCase();
 
@@ -306,26 +332,129 @@ public class HTTPAuthenticationAgent extends WebServerExtension
     
 	public boolean authenticateUser(String realm, String username, String password)
 	{
-		return (false);
+		return(authenticateUser(DEFAULT_HOME,realm,username,password));
+	}
+
+	public boolean authenticateUser(String hostname, String realm, String username, String password)
+	{
+		AuthHash authHash = getAuthHashByHostname(hostname);
+		return (authHash.authenticate(realm, username, password));
+	}
+
+	public String getUserPassword(String hostname, String realm, String username)
+	{
+		AuthHash authHash = getAuthHashByHostname(hostname);
+		return(authHash.getPassword(realm,username));
 	}
 
 
-	/**
-	* Authenticates HTTP request. 
-	*/
-    
-	public boolean authenticate(Props request)
+
+
+	public boolean authenticateUser(AgentRequest request, String authorization, String realm) throws HTTPDigestException
+	{
+		return(authenticateUser(request,authorization,DEFAULT_HOME,realm));
+	}
+
+	public boolean authenticateUser(AgentRequest request, String authorization, String hostname, String realm) throws HTTPDigestException
 	{
 		boolean rval = false;
-		String path = request.getString("path");
-		String hostname = request.getString("host");
-		hostname = hostname.toLowerCase();
 
-		if (path.indexOf('?') != -1)
-		{
-			path = path.substring(0,path.indexOf('?'));
+		if(authorization.toLowerCase().startsWith("basic")) {
+			String userpass = new String(Base64Encoding.decode(authorization.substring(5).trim()));
+			int index = userpass.indexOf(':');
+					
+			if (index != -1)
+			{
+				String username = userpass.substring(0, index);
+				String password = userpass.substring(index + 1);
+						
+				request.setProperty("user_id", username);
+						
+				rval = authenticateUser(hostname, realm, username, password);
+			}
+		}
+		else if(authorization.toLowerCase().startsWith("digest") && getString("authentication_type").equalsIgnoreCase("digest")) {
+			String digestString = authorization.substring(6).trim();
+			String username = digests.parseField("username",digestString);
+			String uri = digests.parseField("uri",digestString);
+			String qop = digests.parseField("qop",digestString);
+			String cnonce = digests.parseField("cnonce",digestString);
+			String nonceCount = digests.parseField("nc",digestString);
+			String response = digests.parseField("response",digestString);
+			String opaque = digests.parseField("opaque",digestString);
+			String clientRealm = digests.parseField("realm",digestString);
+			String clientNonce = digests.parseField("nonce",digestString);
+
+			// these are the minimum required parameters
+			if(opaque!=null && username!=null && uri!=null && clientNonce!=null && clientRealm!=null && response!=null) {
+				String nonce = digests.getNonce(opaque);
+				if(nonce!=null) {
+					if(nonce.equals(clientNonce) && realm.equals(clientRealm)) {
+						String password = getUserPassword(hostname,realm,username);
+						if(password!=null) {
+							String method = request.getString("request");
+							method = method.substring(0,method.indexOf(" "));
+							String a1 = username+":"+realm+":"+password;
+							String a2 = method+":"+uri;
+							if(qop!=null) {
+								if(cnonce!=null && nonceCount!=null) {
+									if(digests.checkCount(opaque,nonceCount)) {
+										String unhashed = digests.hash(a1)+":"+nonce+":"+nonceCount+":"+cnonce+":"+qop+":"+digests.hash(a2);
+										String hash = digests.hash(unhashed);
+										if(hash.equals(response)) {
+											request.setProperty("user_id", username);
+											rval = true;
+										}
+									}
+									else {
+										warning("Digest Authentication: Nonce count mismatch, possible replay attack");
+										// remove the offending opaque
+										digests.opaques.remove(opaque);
+									}
+								}
+								else {
+									throw(new HTTPDigestException());
+								}
+							}
+							else {
+								String hash = digests.hash(digests.hash(a1)+":"+nonce+":"+digests.hash(a2));
+								//										debug("hash="+hash+" response="+response);
+								if(hash.equals(response)) {
+									request.setProperty("user_id", username);
+									rval = true;
+								}
+							}
+						}
+					}
+				}
+			}
+			else {
+				throw(new HTTPDigestException());
+			}
 		}
 
+		return(rval);
+	}
+
+	public void writeNeedAuthenticationResponse(AgentRequest request, String realm)
+	{
+		try {
+			String s = "WWW-Authenticate: Basic realm=\""+ realm+ "\"\n";
+			if(getString("authentication_type").equalsIgnoreCase("digest")) {
+				String opaque = digests.getNewOpaque();
+				String nonce = digests.getNonce(opaque);
+				s = "WWW-Authenticate: Digest realm=\""+realm+"\", qop=\"auth\", nonce=\""+nonce+"\", opaque=\""+opaque+"\", algorithm=\"MD5\"";
+			}
+			request.print(WebServer.getHTMLByCode(WebServer.UNAUTHORIZED,null,s));
+		}
+		catch (Exception e) {
+			error("Exception while replying to request", e);
+		}
+	}
+
+
+	public AuthHash getAuthHashByHostname(String hostname)
+	{
 		AuthHash authHash = null;
 		Object o = hosts.get(hostname);
 
@@ -345,13 +474,29 @@ public class HTTPAuthenticationAgent extends WebServerExtension
 		else
 		{
 			authHash = (AuthHash)hosts.get(DEFAULT_HOME);
-
-			if (authHash == null)
-			{
-				return(false);
-			}
 		}
 
+		return(authHash);
+	}
+
+
+	/**
+	* Authenticates HTTP request. 
+	*/
+    
+	public boolean authenticate(AgentRequest request) throws HTTPDigestException
+	{
+		boolean rval = false;
+		String path = request.getString("path");
+		String hostname = request.getString("host");
+		hostname = hostname.toLowerCase();
+
+		if (path.indexOf('?') != -1)
+		{
+			path = path.substring(0,path.indexOf('?'));
+		}
+
+		AuthHash authHash = getAuthHashByHostname(hostname);
 		String realm = authHash.getRealm(path);
 	
 		if (realm == null)
@@ -361,44 +506,13 @@ public class HTTPAuthenticationAgent extends WebServerExtension
 		else
 		{
 			request.setProperty("realm", realm);
-// debug("path = "+path+", realm = "+realm);
 
 			try
 			{
-				String httpRequest = request.getString("request");
-				int index = httpRequest.indexOf("Authorization: ");
-// debug(httpRequest);
+				String authorization = request.getString("http_headers:authorization");
+				debug("authorization="+authorization);
 
-				if (index != -1)
-				{
-					httpRequest = httpRequest.substring(index+15, httpRequest.indexOf('\n', index));
-					index = httpRequest.toLowerCase().indexOf("basic");
-
-					if (index != -1)
-					{
-						String userpass = new String(Base64Encoding.decode(httpRequest.substring(index + 5).trim()), "ISO-8859-1");
-						index = userpass.indexOf(':');
-// debug("USERPASS = "+userpass);
-
-						if (index != -1)
-						{
-							String username = userpass.substring(0, index);
-							String password = userpass.substring(index + 1);
-
-							request.setProperty("user_id", username);
-
-							if (authenticateUser(realm, username, password))
-							{
-								rval = true;
-							}
-
-							else if (authHash.authenticate(realm, username, password))
-							{
-								rval = true;
-							}
-						}
-					}
-				}
+				rval = authenticateUser(request, authorization, hostname, realm);
 			}
 			catch (Exception e)
 			{
@@ -422,30 +536,19 @@ public class HTTPAuthenticationAgent extends WebServerExtension
 
 		try
 		{
-			String httpRequest = request.getString("request");
-
-			int index = httpRequest.indexOf("Authorization: ");
-
-			if (index != -1)
-			{
-				httpRequest = httpRequest.substring(index + 15, httpRequest.indexOf('\n',index));
-				index = httpRequest.toLowerCase().indexOf("basic");
-
-				// for BASIC authentication
-
+			String authorization = request.getString("http_headers:authorization");
+			if(authorization.startsWith("Basic") || authorization.startsWith("basic")) {
+				String userpass = new String(Base64Encoding.decode(authorization.substring(5).trim()), "ISO-8859-1");
+				int index = userpass.indexOf(':');
+				
 				if (index != -1)
 				{
-					String userpass = new String(Base64Encoding.decode(httpRequest.substring(index + 5).trim()), "ISO-8859-1");
-
-					debug("USERPASS = "+userpass);
-
-					index = userpass.indexOf(":");
-
-					if (index != -1)
-					{
-						rval = userpass.substring(0,index);
-					}
+					rval = userpass.substring(0, index);
 				}
+			}
+			else if(authorization.startsWith("Digest") || authorization.startsWith("digest")) {
+					String digestString = authorization.substring(6).trim();
+					rval = digests.parseField("username",digestString);
 			}
 		}
 		catch (Exception e)
@@ -475,41 +578,46 @@ public class HTTPAuthenticationAgent extends WebServerExtension
 			path = path.substring(0,path.indexOf("?"));
 		}
 
-		if(isAuthenticated(path,hostname)) {
-			if(request.getString("request").indexOf("Authorization: ")==-1) {
-				authorized = false;
-			}
-			else {
-				authorized = authenticate(request);
-			}
-
-			if(!authorized) {
-				if (o == null)	{
-					if (hostname.indexOf(":") != -1)	{
-						hostname = hostname.substring(0, hostname.indexOf(":"));
-						o = hosts.get(hostname);
-					}
-				}
-				
-				if ((o != null) && (o instanceof AuthHash)) {
-					authHash = (AuthHash) o;
+		if(isAuthenticated(request,path,hostname)) {
+			try {
+				if(request.getString("request").indexOf("Authorization: ")==-1) {
+					authorized = false;
 				}
 				else {
-					authHash = (AuthHash) hosts.get(DEFAULT_HOME);
+					authorized = authenticate(request);
 				}
-				
+
+				if(!authorized) {
+					if (o == null)	{
+						if (hostname.indexOf(":") != -1)	{
+							hostname = hostname.substring(0, hostname.indexOf(":"));
+							o = hosts.get(hostname);
+						}
+					}
+					
+					if ((o != null) && (o instanceof AuthHash)) {
+						authHash = (AuthHash) o;
+					}
+					else {
+						authHash = (AuthHash) hosts.get(DEFAULT_HOME);
+					}
+
+					writeNeedAuthenticationResponse(request,authHash.getRealm(path));
+				}
+				else {
+					// Successfully authorized, so don't handle request
+					rval = false;
+				}
+			}
+			catch(HTTPDigestException de) {
+				// This means the the Authorization field is malformed
 				try {
-					String s = "WWW-Authenticate: Basic realm=\""+ authHash.getRealm(path)+ "\"\n";
-					out.write(WebServer.getHTMLByCode(WebServer.UNAUTHORIZED,null,s).getBytes());
+					out.write(WebServer.getHTMLByCode(WebServer.BAD_REQUEST).getBytes());
 					out.flush();
 				}
 				catch (Exception e) {
 					error("Exception while replying to request", e);
 				}
-			}
-			else {
-				// Successfully authorized, so don't handle request
-				rval = false;
 			}
 		}
 		else {
@@ -760,6 +868,18 @@ public class HTTPAuthenticationAgent extends WebServerExtension
 			}
 		}
 
+		public String getPassword(String realm, String username)
+		{
+	    	Hashtable users = (Hashtable) userHash.get(realm);
+			String pass = null;
+
+			if (users != null)
+			{
+				pass = (String) users.get(username);
+			}
+
+			return(pass);
+		}
 
 		public boolean authenticate(String realm, String username, String password)
 		{
@@ -890,6 +1010,180 @@ public class HTTPAuthenticationAgent extends WebServerExtension
 			}
 
 			return(rval);
+		}
+	}
+
+
+	class DigestSession
+	{
+		String opaque;
+		String nonce;
+		long lastAccess;
+		int count;
+
+		public DigestSession(String newopaque, String newnonce)
+		{
+			opaque = newopaque;
+			nonce = newnonce;
+			lastAccess = System.currentTimeMillis();
+			count = 0;
+		}
+
+		public boolean checkCount(String s)
+		{
+			return(Integer.valueOf(s,16).intValue()==count);
+		}
+	}
+
+	class DigestAuthenticationTracker extends Thread
+	{
+		public boolean stopRunning;
+		Hashtable opaques;
+		Object sync;
+		SecureRandom random;
+
+		private char[] DIGITS = {
+			'0', '1', '2', '3', '4', '5', '6', '7',
+			'8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+		};
+
+		public DigestAuthenticationTracker()
+		{
+			opaques = new Hashtable();
+			sync = new Object();
+			try {
+				random = SecureRandom.getInstance("SHA1PRNG");
+			}
+			catch(NoSuchAlgorithmException e) {
+				error("Could not locate SHA-1 PRNG security provider. Digest authentication will be broken.",e);
+			}
+		}
+
+		public String getNewOpaque()
+		{
+			String opaque = UUID.randomUUID().toString();
+			String nonce = generateNonce();
+			while(opaque.indexOf("-")!=-1) {
+				opaque = opaque.substring(0,opaque.indexOf("-"))+opaque.substring(opaque.indexOf("-")+1);
+			}
+			DigestSession session = new DigestSession(opaque,nonce);
+			synchronized(sync) {
+				opaques.put(opaque,session);
+			}
+			return(opaque);
+		}
+
+		public String getNonce(String opaque)
+		{
+			String rval = null;
+			synchronized(sync) {
+				if(opaques.containsKey(opaque)) {
+					DigestSession session = (DigestSession)opaques.get(opaque);
+					rval = session.nonce;
+				}
+			}
+			return(rval);
+		}
+
+		public boolean checkCount(String opaque, String countHex)
+		{
+			boolean rval = false;
+			synchronized(sync) {
+				if(opaques.containsKey(opaque)) {
+					DigestSession session = (DigestSession)opaques.get(opaque);
+					rval = session.checkCount(countHex);
+				}
+			}
+			return(rval);
+		}
+
+		public void incrementCount(String opaque)
+		{
+			synchronized(sync) {
+				if(opaques.containsKey(opaque)) {
+					DigestSession session = (DigestSession)opaques.get(opaque);
+					session.count++;
+				}
+			}
+		}
+
+		protected String generateNonce()
+		{
+			StringBuffer rval = new StringBuffer();
+			byte[] buffer = new byte[16];
+			random.nextBytes(buffer);
+			for(int x=0;x<buffer.length;x++) {
+				int val = (int)(buffer[x]+128);
+				if(val<16) {
+					rval.append("0");
+				}
+				rval.append(Integer.toHexString(val));
+			}
+			return(rval.toString());
+		}
+
+		public String parseField(String fieldName, String digestString)
+		{
+			String rval = null;
+			int index = digestString.indexOf(fieldName+"=");
+			if(index!=-1) {
+				String tmp = digestString.substring(index+fieldName.length()+1);
+				//				index = tmp.indexOf("=");
+				//				if(index!=-1) {
+				//					tmp = tmp.substring(index+1).trim();
+					index = tmp.indexOf(",");
+					if(index==-1) {
+						index = tmp.length();
+					}
+					rval = tmp.substring(0,index).replaceAll("\"","");
+					//				}
+			}
+			return(rval);
+		}
+
+		public String hash(String in)
+		{
+			StringBuffer hexString = new StringBuffer();
+
+			try {
+				MessageDigest md5 = MessageDigest.getInstance("MD5");
+				byte[] hashed = md5.digest(in.getBytes());
+				for (int i=0;i<hashed.length;i++) {
+					hexString.append(DIGITS[(0xF0 & hashed[i]) >>> 4 ]);
+					hexString.append(DIGITS[ 0x0F & hashed[i] ]);
+					//					hexString.append(Integer.toHexString(0xFF & hashed[i]));
+				}
+			}
+			catch(NoSuchAlgorithmException e1) {
+				error("This security provider doesn't provide MD5 message digests, Digest authentication will be broken",e1);
+			}
+			catch(Exception e) {
+				error("Error while hashing",e);
+			}
+
+			return(hexString.toString());
+		}
+
+		public void run()
+		{
+			while(!stopRunning) {
+				try {
+					sleep(5000);
+					synchronized(sync) {
+						Enumeration keys = opaques.keys();
+						while(keys.hasMoreElements()) {
+							String opaque = (String)keys.nextElement();
+							DigestSession session = (DigestSession)opaques.get(opaque);
+							if(System.currentTimeMillis()-session.lastAccess > getInteger("digest_timeout")) {
+								opaques.remove(opaque);
+							}
+						}
+					}
+				}
+				catch(Exception e) {
+					error("Error cleaning old Digest opaques",e);
+				}
+			}
 		}
 	}
 }

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<props_list>
+	<props>
+		<agent_id>100</agent_id>
+		<classname>com.cometway.ak.ServiceManager</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>ServiceManager</name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>200</agent_id>
+		<classname>DemoService</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>DemoService</name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>300</agent_id>
+		<classname>DemoServiceClient</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>DemoServiceClient</name>
+		<startup>true</startup>
+	</props>
+</props_list>

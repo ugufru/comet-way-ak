@@ -224,6 +224,7 @@ public class SendEmailAgent extends ServiceAgent implements Runnable, SendEmailI
 								IMessage m = (IMessage) e.nextElement();
 								String to = m.getHeaderInfo("to");
 								String from = m.getHeaderInfo("from");
+								String cc = m.getHeaderInfo("cc");
 
 								ok = true;
 								count++;
@@ -242,6 +243,79 @@ public class SendEmailAgent extends ServiceAgent implements Runnable, SendEmailI
 								{
 									try
 									{
+										// We have to duplicate the ESMTPSender.sendMail() here
+										if(mail.sendFrom(from)) {
+											Enumeration users = EmailHeader.getSendToUsers(to);
+											StringBuffer failedUsers = new StringBuffer();
+											boolean goodUser = false;
+											boolean isError = false;
+											while(users.hasMoreElements()) {
+												String user = (String)users.nextElement();
+												if(mail.sendTo(user)) {
+													goodUser = true;
+												}
+												else {
+													if(mail.getResponseType() == mail.kTempFailure) {
+														failedUsers.append(user);
+														failedUsers.append(",");
+														isError = true;
+													}
+													error("Rejected envelope TO address: "+user);
+												}
+											}
+
+											users = EmailHeader.getSendToUsers(cc);
+											while(users.hasMoreElements()) {
+												String user = (String)users.nextElement();
+												if(mail.sendTo(user)) {
+													goodUser = true;
+												}
+												else {
+													error("Rejected CC address: "+user);
+												}
+											}
+
+											if(!goodUser) {
+												if(isError) {
+													// this means the email was flat out rejected so don't put back into queue
+													ok = true;
+												}
+												else {
+													// We have rejected users. We need to set the To field with the rejected ones.
+													m.setHeaderInfo("to",failedUsers.toString());
+													ok = false;
+												}
+											}
+											else {
+												if(!mail.sendData(m.toString())) {
+													if(mail.getResponseType() != mail.kTempFailure) {
+														// we were rejected, don't put back into queue
+														ok = true;
+													}
+													else {
+														ok = false;
+													}
+												}
+												else {
+													// if we have rejected users we need to resend this email with the rejected users.
+													if(failedUsers.length()>0) {
+														m.setHeaderInfo("to",failedUsers.toString());
+														ok = false;
+													}
+													else {
+														// message sent successfully
+														println("Message " + count + " sent (" + from + " -> " + to + ")");
+														ok = true;
+													}
+												}
+											}
+										}
+										else {
+											error("The envelope FROM address was rejected: "+from);
+											ok = true;
+										}
+											
+										/*
 										if (mail.sendMessage(m) == false)
 										{
 												error("Message " + count + " could not be sent.\n" + m);
@@ -250,13 +324,13 @@ public class SendEmailAgent extends ServiceAgent implements Runnable, SendEmailI
 										else
 										{
 											println("Message " + count + " sent (" + from + " -> " + to + ")");
-											
-											if (mail.sendRset() == false)
-											{
-												error("Could not reset SMTP state");
-												throw new ESMTPException(ESMTPException.RSET,"Could not reset state");
-											}
+										*/
+										if (mail.sendRset() == false)
+										{
+											error("Could not reset SMTP state");
+											throw new ESMTPException(ESMTPException.RSET,"Could not reset state");
 										}
+											//										}
 									}
 									catch(ESMTPException ex)
 									{

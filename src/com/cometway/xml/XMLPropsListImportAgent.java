@@ -4,7 +4,7 @@ package com.cometway.xml;
 
 import com.cometway.ak.Agent;
 import com.cometway.props.Props;
-import com.cometway.props.PropsList;
+import com.cometway.props.PropsListInterface;
 import com.cometway.props.PropsException;
 import com.cometway.util.Base64Encoding;
 import com.cometway.util.DateTools;
@@ -13,12 +13,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.List;
 import java.util.Vector;
 
 
 
 /**
-* Imports Props records from a XMLPropsList file into the specified PropsList.
+* Imports Props records from a XMLPropsList file into the specified PropsListInterface.
 */
 
 public class XMLPropsListImportAgent extends Agent
@@ -47,7 +48,7 @@ public class XMLPropsListImportAgent extends Agent
 
 			in = new FileInputStream(new File(filename));
 
-			int count = parseInputStream(in);
+			int count = parse(in);
 
 			println("" + count + " records loaded");
 		}
@@ -72,17 +73,38 @@ public class XMLPropsListImportAgent extends Agent
 	}
 
 
+	protected int parse(InputStream in) throws Exception
+	{
+		PropsListInterface database = (PropsListInterface) getServiceImpl(getTrimmedString("database_name"));
+		String container_tag = getString("container_tag");
+		String props_tag = getString("props_tag");
+		List results = parseInputStream(in, container_tag, props_tag);
+		int count = results.size();
+
+		for (int i = 0; i < count; i++)
+		{
+			Props p = (Props) results.get(i);
+
+debug("******************** RECEIVED ********************\n" + p);
+
+			database.addProps(p);
+		}
+
+		return (count);
+	}
+
+
 	/**
 	* Loads a Props List XML document into a Vector of Props.
 	*/
 
-	public int parseInputStream(InputStream in) throws XMLParserException
+	public static List parseInputStream(InputStream in, String containerTag, String propsTag) throws XMLParserException
 	{
-		PropsList database = (PropsList) getServiceImpl(getTrimmedString("database_name"));
-		String containerStart = '<' + getString("container_tag") + '>';
-		String containerEnd = "</" + getString("container_tag") + '>';
-		String propsStart = '<' + getString("props_tag") + '>';
-		String propsEnd = "</" + getString("props_tag") + '>';
+		List results = new Vector();
+		String containerStart = '<' + containerTag + '>';
+		String containerEnd = "</" + containerTag + '>';
+		String propsStart = '<' + propsTag + '>';
+		String propsEnd = "</" + propsTag + '>';
 		int count = 0;
 
 		XMLParser parser = new XMLParser(in);
@@ -166,9 +188,7 @@ public class XMLPropsListImportAgent extends Agent
 					}
 				}
 
-				count++;
-//				debug("Importing record " + count);
-				database.addProps(p);
+				results.add(p);
 			}
 			else if (t.data.equals(containerEnd))
 			{
@@ -182,7 +202,7 @@ public class XMLPropsListImportAgent extends Agent
 
 		parser.close();
 
-		return (count);
+		return (results);
 	}
 }
 

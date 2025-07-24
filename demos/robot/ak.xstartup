@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<props_list>
+	<props>
+		<agent_id>100</agent_id>
+		<classname>com.cometway.ak.ServiceManager</classname>
+		<hide_debug>true</hide_debug>
+		<name>ServiceManager</name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>200</agent_id>
+		<classname>com.cometway.ak.Scheduler</classname>
+		<name>Scheduler</name>
+		<service_name>scheduler</service_name>
+		<startup>true</startup>
+	</props>
+	<props>
+		<agent_id>300</agent_id>
+		<classname>RobotAgent</classname>
+		<hide_debug>true</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>RobotAgent</name>
+		<schedule>between 0:0:0-23:59:59 every 5s</schedule>
+		<sleep_time_ms>2</sleep_time_ms>
+		<startup>true</startup>
+	</props>
+</props_list>

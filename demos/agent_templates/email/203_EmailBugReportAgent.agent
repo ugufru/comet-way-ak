@@ -1,0 +1,11 @@
+agent_id=203
+classname=com.cometway.email.EmailBugReportAgent
+hide_debug=false
+hide_println=false
+hide_warning=false
+name=EmailBugReportAgent
+recipients=paul@cometway.com,pc@spacemoose.com
+reply_to=chameleon@cometway.com
+report_title=Bug Report from Chameleon
+schedule=between 0:0:0-23:59:59 every 60s
+service_name=bug_report_agent

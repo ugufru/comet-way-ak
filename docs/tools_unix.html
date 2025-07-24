@@ -1,0 +1,318 @@
+
+<HTML>
+<HEAD>
+<TITLE>Comet Way Agent Kernel</TITLE>
+<STYLE>
+	A:link {text-decoration: none; font-weight: bold }
+	A:visited {text-decoration: none; font-weight: bold }
+	A:hover {text-decoration: underline; font-weight: bold }
+	H2, H3, H4 { font-family: helvetica }
+	IMG { border: 0 }
+	TT, PRE { font-family: monaco,lucida console,courier }
+	UL { list-style-type: square }
+</STYLE>
+</HEAD>
+<BODY BGCOLOR='#FFFFFF' LINK='#003399' VLINK='#003399' ALINK='#FF0000'>
+
+<P ALIGN='RIGHT'><A HREF='../README.html'>Contents</A></P>
+
+<H2>
+Comet Way Agent Kernel Tools for UNIX
+</H2>
+<BLOCKQUOTE>
+
+<A NAME='TableOfContents'><H3>Table of Contents</H3></A>
+
+<BLOCKQUOTE>
+	Comet Way Agent Kernel comes with a set of scripts for building and running agent applications.
+	While these scripts are not necessary in order to make agents work, they are a convenient set of tools
+	that were used in the development process and serve as a useful reference point.
+	<P>
+	
+	<TABLE BGCOLOR='#FFFFFF' CELLSPACING='0' CELLPADDING='8' BORDER='1' BORDERCOLOR='#6699CC'>
+	<TR>
+		<TD><A HREF='#ak'>ak</A>
+		<TD>Starts and initializes the Comet Way Agent Kernel.
+	</TR>
+	<TR>
+		<TD><A HREF='#ab'>ab</A>
+		<TD>Starts the Agent Browser tool using .startup files from the current directory.
+	</TR>
+	<TR>
+		<TD><A HREF='#jc'>jc</A>
+		<TD>Compiles .java files, routing the .class files to separate classes directory.
+	</TR>
+	<TR>
+		<TD><A HREF='#build'>build.sh</A>
+		<TD>Calls the compile.sh, demos.sh, finalize.sh, and document.sh scripts
+		in succession in order to build and test this release.
+	</TR>
+	<TR>
+		<TD><A HREF='#compile'>compile.sh</A>
+		<TD>Expands the imported JAR files into the classes/ directory, then compiles
+		all of the .java files located underneath the src/ directory.
+	</TR>
+	<TR>
+		<TD><A HREF='#document'>document.sh</A>
+		<TD>Generates HTML documentation for this release using the javadoc tool.
+	</TR>
+	<TR>
+		<TD><A HREF='#finalize'>finalize.sh</A>
+		<TD>Finalizes a build of this project by removing class files, touching all files with
+		the current date, and generating a dated tar.gz archive of the entire project.
+	</TR>
+	<TR>
+		<TD><A HREF='#demos'>demos.sh</A>
+		<TD>Compiles the .java files under the demos/ directory.
+	</TR>
+	</TABLE>
+</BLOCKQUOTE>
+
+<A NAME='ak'><H3>ak</H3></A>
+
+<BLOCKQUOTE>
+	This shell script is used to initialize and start the Comet Way Agent Kernel. 
+	If you used the ak/install.sh script, this script was installed into your ~/bin directory.
+	Most UNIX configurations already have the ~/bin directory included in the PATH, and
+	issuing the <TT>ak</TT> command in any directory with .startup files will startup the Agent Kernel.
+	<P>
+	The <TT>ak</TT> script looks like this:
+	<P>
+<TABLE BGCOLOR='#000000'><TR><TD>
+<FONT COLOR='#99FF99'>
+<PRE>#! /bin/sh
+CLASSPATH=/Users/mario/classes:/Users/mario/ak/ak.jar
+java -classpath ${CLASSPATH} com.cometway.ak.AK $*                            </PRE></FONT>
+</TD></TR></TABLE>
+	<P>
+	<I>Note: If the <TT>ak</TT> command does not work for you, you may need to add ~/bin to your
+	PATH, or make edits to the <TT>ak</TT> script for your particular configuration.</I>
+	<P>
+	The ak command uses the following syntax:
+	<P>
+<PRE>
+ak [-hide_println] [-hide_debug] [-hide_warning] [-props <file>]
+    [-startup_agent &lt;classname&gt;] [-startup_dir &lt;dir&gt;] [&lt;file&gt;] ...
+</PRE>
+	<P>
+	When this shell script is executed, the Agent Kernel is loaded and starts up an agent called
+	the Startup Agent. This agent is responsible for scanning the Startup Directory for files
+	ending in <I>.startup</I> that contain the agent properties of each additional agent to start. 
+	<P>
+	After these initial agents have started, you can start additional agents by specifying the
+	name of additional agent properties files ending in <I>.agent</I>. 
+	<P>
+	Each agent properties or <I>Props</I> file must contain a classname property set to the
+	classname of the agent to be loaded. Other properties can be defined for the agent in these
+	Props files to customize their behavior. 
+	<P>
+	Here is the Props file for starting the Service Manager agent:
+	<P>
+<TABLE BGCOLOR='#000000'><TR><TD>
+<FONT COLOR='#99FF99'><PRE>
+agent_id=100
+classname=com.cometway.ak.ServiceManager                                      </PRE></FONT>
+</TD></TR></TABLE>
+	<P>
+	The <TT>classname</TT> property tells the Agent Kernel which Java class to instantiate
+	and start as an Agent. The <TT>agent_id</TT> property is assigned by the Agent Kernel
+	if you do not provide one. When there are more than one agent of a particular class,
+	assigning each agent a different <TT>agent_id</TT> can help you distinguish their 
+	activity in the Reporter output.
+
+	<H4>Examples of Using the ak Command</H4>
+	
+	<BLOCKQUOTE>
+		1. Load Agent Kernel and Service Manager
+		<PRE>   ak</PRE>
+		
+		2. Load Agent Kernel, Service Manager, and Object Manager
+		<PRE>   ak 110_ObjectManager.agent</PRE>
+		
+		3. Load the Scheduler and Load Monitor
+		<PRE>   ak 120_Scheduler.agent 130_LoadMonitor.agent</PRE>
+		
+		4. Load all agents and hide Agent Kernel activity output
+		<PRE>   ak -hide_println *.agent</PRE>
+		
+		5. Load startup agents from another directory
+		<PRE>   ak -startup_dir ./startup</PRE>
+		
+		6. Load an alternate startup agent
+		<PRE>   ak -startup_agent com.cometway.swing.StartupEditor</PRE>
+		
+		7. Load Agent Kernel configuration properties from a file
+		<PRE>   ak -props ak.cfg</PRE>
+	</BLOCKQUOTE>
+</BLOCKQUOTE>
+
+
+<A NAME='ab'><H3>ab</H3></A>
+<BLOCKQUOTE>
+	This shell script is used to start the Agent Browser application. When the <TT>ab</TT>
+	command is issued from a directory that contains </I>.startup</I> files, the
+	browser displays a grid representing the agents defined in each of the files
+	it found. This application allows you to change the attributes of these agents,
+	create and/or remove agents, and replace the existing agent configuration with
+	the result. The Agent Browser makes it unnecessary to edit each .startup file
+	separately using a text editor.
+	<P>
+	The <TT>AB.BAT</TT> batch file looks like this:
+	<P>
+
+<TABLE BGCOLOR='#000000'><TR><TD>
+<FONT COLOR='#99ff99'>
+<PRE>#! /bin/sh
+CLASSPATH=/Users/mario/classes:/Users/mario/ak/ak.jar
+java -classpath ${CLASSPATH} com.cometway.ak.AK -startup_agent com.cometway.swing.StartupEditor </PRE></FONT>
+</TD></TR></TABLE>
+	<P>
+	<I>Note: The Swing API (part of J2SE) is required to use the Agent Browser.</I>
+</BLOCKQUOTE>
+
+
+<A NAME='jc'><H3>jc</H3></A>
+<BLOCKQUOTE>
+	This shell script is used to compile .java files, putting the .class
+	files into a separate classes directory. You can use the <TT>jc</TT>
+	command to compile Java source from any directory.
+	<P>
+	This shell script uses the <TT>~/classes</TT> directory as the target
+	for compiled classes.
+	<P>
+	Imported JAR archives can be expanded into the classes directory
+	keeping the CLASSPATH short and simple. The location of your Java 
+	source code relative to your CLASSPATH becomes a non-issue, making 
+	it easier to organize and integrate source code from various
+	projects without moving any files.
+	<P>
+	The <TT>jc</TT> command uses the syntax:<TT>jc &lt;file&gt; ...</TT>
+	<P>
+	The <TT>jc</TT> shell script looks like this:
+	<P>
+<TABLE BGCOLOR='#000000'><TR><TD>
+<FONT COLOR='#99ff99'><PRE>
+#! /bin/sh
+echo Compiling...
+ls $*
+CLASSPATH=/Users/mario/classes:/Users/mario/ak/ak.jar
+javac -classpath ${CLASSPATH} -d /Users/mario/classes $*                       </PRE></FONT>
+</TD></TR></TABLE>
+
+</BLOCKQUOTE>
+
+<A NAME='build'><H3>build.sh</H3></A>
+<BLOCKQUOTE>
+	This shell script is used to compile, javadoc, finalize, and test the Comet Way
+	Agent Kernel project. This is the script Comet Way Engineers used to create
+	this build.
+	<P>
+	The <TT>build.sh</TT> command should be executed from the bin/ directory:
+<PRE>
+./build.sh
+</PRE>
+	This script performs the following operations:
+	<OL>
+	<LI>Executes the ./compile.sh shell script.
+	<LI>Executes the ./demos.sh shell script.
+	<LI>Executes the ./finalize.sh shell script.
+	<LI>Executes the ./document.sh shell script.
+	</OL>
+</BLOCKQUOTE>
+
+<A NAME='compile'><H3>compile.sh</H3></A>
+<BLOCKQUOTE>
+	This shell script is used to compile Java class files for Comet Way Agent Kernel,
+	and build the <TT>ak.jar</TT> archive.
+	The <TT>compile.sh</TT> command should be executed from the bin/ directory:
+<PRE>
+./compile.sh
+</PRE>
+	This script performs the following operations:
+	<OL>
+	<LI>Removes all class files from the ../classes directory.
+	<LI>Expands imported JAR files into the ../classes directory.
+	<LI>Compiles all Java source files under the ../src directory to the ../classes directory.
+	<LI>Creates the ../ak.jar from the contents of the ../classes directory.
+	</OL>
+</BLOCKQUOTE>
+
+<A NAME='document'><H3>document.sh</H3></A>
+<BLOCKQUOTE>
+	This shell script documents the source code included in this build using
+	the <TT>javadoc</TT> tool (included with the JDK).
+	The <TT>document.sh</TT> command should be executed from the bin/ directory:
+<PRE>
+./document.sh
+</PRE>
+	This script performs the following operations:
+	<OL>
+	<LI>Removes previous javadoc files from the ../javadocs directory.
+	<LI>Javadocs files under the ../src and ../import directories
+	which generates documentation into the ../javadocs directory.
+	</OL>
+	The current javadocs can be viewed <A HREF='../javadocs/'>here</A>.
+</BLOCKQUOTE>
+
+<A NAME='finalize'><H3>finalize.sh</H3></A>
+<BLOCKQUOTE>
+	This shell script finalizes changees to the project files before creating
+	a newly dated build archive (tar.gz). Primarily it removes the Java class
+	files to make the build smaller and quicker to download.
+	The <TT>finalize.sh</TT> command should be executed from the bin/ directory:
+<PRE>
+./finalize.sh
+</PRE>
+	This script performs the following operations:
+	<OL>
+	<LI>Removes Java class files from the ../classes directory.
+	<LI>Sets all file and directory dates to the current date and time.
+	<LI>Creates a tar.gz archive of the project and names it using the current date.
+	</OL>
+</BLOCKQUOTE>
+
+<A NAME='demos'><H3>demos.sh</H3></A>
+<BLOCKQUOTE>
+	This shell script can be used to quickly compile the agents under the demos/ directory.
+	Go to demos/ak or demos/httpd and type <TT>ak</TT> to try out the demos.
+	The <TT>demos.sh</TT> command should be executed from the bin/ directory:
+<PRE>
+./demos.sh
+</PRE>
+	This script only compiles Java class files under the demos/ directory to the ../classes directory,
+	and expects to find the ak.jar file in its CLASSPATH to resolve dependencies.
+</BLOCKQUOTE>
+
+</BLOCKQUOTE>
+
+
+<HR>
+
+<TABLE WIDTH='100%'><TR>
+<TD VALIGN='TOP'>
+<FONT SIZE='-1'>
+Copyright &copy; 1999-2003, Comet Way, Inc.<BR>
+</FONT>
+</TD>
+<TD ALIGN='RIGHT'><A HREF='http://www.cometway.com'><IMG SRC='cometway140.gif' BORDER='0'><A/></TD>
+</TR></TABLE>
+
+</BODY>
+</HTML>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

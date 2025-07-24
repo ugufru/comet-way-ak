@@ -1,0 +1,5 @@
+agent_classname=HelloWorldAgent
+agent_id=102
+classname=com.cometway.ak.AgentReplicator
+name=AgentReplicator
+number_of_agents=5

@@ -40,7 +40,7 @@ public class HTTPAgentRequest extends AgentRequest
 
 	protected StringBuffer dataBuffer = new StringBuffer();
 
-	public String defaultResponse = "HTTP/1.1 200 Ok\n";
+	public String defaultResponse = "HTTP/1.1 200 Ok\r\n";
 	public boolean headerSending;
 	public boolean headerSent;
 	private boolean newline;
@@ -48,7 +48,6 @@ public class HTTPAgentRequest extends AgentRequest
 	protected InputStream browserIn;
 
 	protected Vector cookies;
-	protected Props clientCookies;
 	protected String sessionID;
 	protected boolean headRequest;
 
@@ -87,7 +86,7 @@ public class HTTPAgentRequest extends AgentRequest
 
 	public String getUserAgent()
 	{
-		return (getUserAgent(getString("request")));
+		return (getUserAgent(this));
 	}
 
 
@@ -97,35 +96,24 @@ public class HTTPAgentRequest extends AgentRequest
 
 	public static String getUserAgent(AgentRequest request)
 	{
-		return (getUserAgent(request.getString("request")));
+		if(request instanceof HTTPAgentRequest) {
+			return (((HTTPAgentRequest)request).getRequestHeader("user-agent"));
+		}
+		else {
+			return("");
+		}
 	}
 
 
 	/**
-	 * Returns the User-Agent header parameter value from the specified String.
+	 * Returns this requests header parameter
 	 */
 
-	protected static String getUserAgent(String s)
+	public String getRequestHeader(String header)
 	{
-		String userAgent = null;
-
-		String ss = s.toLowerCase();
-		int start = ss.indexOf("user-agent:");
-
-		if (start != -1)
-		{
-			start += 11; // length of "User-Agent:"
-
-			int end = ss.indexOf("\n", start);
-
-			if (end != -1)
-			{
-				userAgent = s.substring(start, end).trim();
-			}
-		}
-
-		return (userAgent);
+		return(getString("http_headers:"+header));
 	}
+
 
 	/**
 	 * If an input stream to the client was provided, this method will return that stream.
@@ -171,6 +159,7 @@ public class HTTPAgentRequest extends AgentRequest
 	{
 		String rval = "";
 		String request = props.getString("request");
+			
 		int x = request.indexOf("\n\n");
 		if(x!=-1) {
 			if(request.indexOf("\r\n\r\n")!=-1 && request.indexOf("\r\n\r\n")<x) {
@@ -188,10 +177,28 @@ public class HTTPAgentRequest extends AgentRequest
 			if(x!=-1) {
 				rval = request.substring(0,x);
 			}
+			else {
+				rval = request;
+			}
 		}
+
 		return(rval);
 	}
 
+
+	/**
+	 * Thie method returns the Octet-Stream request body as a byte array. If the request
+	 * had no Octet-Stream body, then an empty array is returned.
+	 */
+	public byte[] getOctetStreamRequestBody()
+	{
+		if(hasProperty("octet-stream_request_body")) {
+			return((byte[])getProperty("octet-stream_request_body"));
+		}
+		else {
+			return(new byte[0]);
+		}
+	}
 
 	/**
 	 * Returns a content length of the request if one exists. If the content length was not
@@ -201,29 +208,9 @@ public class HTTPAgentRequest extends AgentRequest
 	public int getContentLength()
 	{
 		int rval = -1;
-		String request = props.getString("request");
-		int i = request.indexOf("Content-Length");
 
-		if (i==-1)
-		{
-			i = request.indexOf("Content-length");
-
-			if (i==-1)
-			{
-				i = request.indexOf("content-length");
-			}
-		}
-
-		if (i!=-1)
-		{
-			i = request.indexOf(":",i);
-
-			try
-			{
-				int tmp = Integer.parseInt(request.substring(i+1,request.indexOf("\n",i)).trim());
-				rval = tmp;
-			}
-			catch(Exception e) {;}
+		if(hasProperty("http_headers:content-length")) {
+			rval = getInteger("http_headers:content-length");
 		}
 
 		return(rval);
@@ -237,6 +224,8 @@ public class HTTPAgentRequest extends AgentRequest
 	public void detectBrowsers()
 	{
 		String s = getUserAgent();
+
+		setProperty("user_agent", s);
 
 		if (s.indexOf("compatible") >= 0)
 		{
@@ -524,61 +513,71 @@ public class HTTPAgentRequest extends AgentRequest
 	 */
 	public Props getCookies()
 	{
-		if(clientCookies==null) {
-			Props rval = new Props();
-	    
-			String headers = getRequestHeaders();
-			int index = headers.indexOf("Cookie:");
-			if(index!=-1) {
-				headers = headers.substring(index+7).trim();
-				index = headers.indexOf("\n");
-				if(index!=-1) {
-					headers = headers.substring(0,index).trim();
-				}
+		Props rval = new Props();
 		
-				index = headers.indexOf("=");
-				while(headers.trim().length()>0) {
-					if(index!=-1) {
-						if((headers.indexOf(";")!=-1 && headers.indexOf(";")>index) || headers.indexOf(";")==-1) {
-							int tmpIndex = headers.indexOf(";",index);
-							if(tmpIndex!=-1) {
-								rval.setProperty(headers.substring(0,index).trim(),headers.substring(index+1,tmpIndex).trim());
-								headers = headers.substring(tmpIndex+1).trim();
-								index = headers.indexOf("=");
-							}
-							else {
-								rval.setProperty(headers.substring(0,index).trim(),headers.substring(index+1).trim());
-								headers = "";
-							}
+		String headers = getRequestHeaders();
+		int index = headers.indexOf("Cookie:");
+		if(index!=-1) {
+			headers = headers.substring(index+7).trim();
+			index = headers.indexOf("\n");
+			if(index!=-1) {
+				headers = headers.substring(0,index).trim();
+			}
+
+			index = headers.indexOf("=");
+			while(headers.trim().length()>0) {
+				if(index!=-1) {
+					if((headers.indexOf(";")!=-1 && headers.indexOf(";")>index) || headers.indexOf(";")==-1) {
+						int tmpIndex = headers.indexOf(";",index);
+						if(tmpIndex!=-1) {
+							rval.setProperty(headers.substring(0,index).trim(),headers.substring(index+1,tmpIndex).trim());
+							headers = headers.substring(tmpIndex+1).trim();
+							index = headers.indexOf("=");
 						}
 						else {
-							index = headers.indexOf(";");
-							rval.setProperty(headers.substring(0,index).trim(),"NO_VALUE");
-							headers = headers.substring(index+1);
-							index = headers.indexOf("=");
+							rval.setProperty(headers.substring(0,index).trim(),headers.substring(index+1).trim());
+							headers = "";
 						}
 					}
 					else {
-						if(headers.indexOf(";")!=-1) {
-							index = headers.indexOf(";");
-							rval.setProperty(headers.substring(0,index).trim(),"NO_VALUE");
-							headers = headers.substring(index+1);
-							index = headers.indexOf("=");
-						}
-						else {
-							rval.setProperty(headers.trim(),"NO_VALUE");
-							headers = "";
-						}
-					}			    
+						index = headers.indexOf(";");
+						rval.setProperty(headers.substring(0,index).trim(),"NO_VALUE");
+						headers = headers.substring(index+1);
+						index = headers.indexOf("=");
+					}
 				}
+				else {
+					if(headers.indexOf(";")!=-1) {
+						index = headers.indexOf(";");
+						rval.setProperty(headers.substring(0,index).trim(),"NO_VALUE");
+						headers = headers.substring(index+1);
+						index = headers.indexOf("=");
+					}
+					else {
+						rval.setProperty(headers.trim(),"NO_VALUE");
+						headers = "";
+					}
+				}			    
 			}
-			return(rval);
 		}
-		else {
-			return(clientCookies);
-		}
+		return(rval);
 	}
 
+	/**
+	 * This method returns the Set-Cookie response header String. If no cookies have been
+	 * set in this HTTPAgentRequest, then the String will be empty. This is primarily used
+	 * by agents that write their own HTTP response.
+	 */
+	public String getSetCookies()
+	{
+		StringBuffer buffer = new StringBuffer();
+		if(cookies!=null) {
+			for(int x=0;x<cookies.size();x++) {
+				buffer.append("Set-Cookie: "+cookies.elementAt(x)+"\r\n");
+			}
+		}
+		return(buffer.toString());
+	}
 
 	/**
 	 * This method adds a Cookie to the portion of the HTTP response header, when the header is sent.
@@ -657,30 +656,27 @@ public class HTTPAgentRequest extends AgentRequest
 	 *
 	 * If no session ID was found in the client cookies, no cookie will be sent.
 	 */
-	public boolean setSessionCookie(SessionManagerInterface sessionManager)
+	public boolean setSessionCookie(SessionManagerInterface sessionManager, String id)
 	{
 		boolean rval = false;
 
-		String id = getSessionID();
-		if(id!=null) {
-			Props sessionProps = sessionManager.getSessionProps(id);
-			if(sessionProps!=null) {
-				String cookieString = "session_id="+id;
-				if(sessionProps.hasProperty("expires")) {
-					cookieString = cookieString+"; expires="+sessionProps.getString("expires");
-				}
-				if(sessionProps.hasProperty("path")) {
-					cookieString = cookieString+"; path="+sessionProps.getString("path");
-				}
-				addCookie(cookieString);
-				rval = true;
+		if(id==null) {
+			id = sessionManager.createSession();
+		}
+		Props sessionProps = sessionManager.getSessionProps(id);
+		if(sessionProps!=null) {
+			String cookieString = "session_id="+id;
+			if(sessionProps.hasProperty("expires")) {
+				cookieString = cookieString+"; expires="+sessionProps.getString("expires");
 			}
-			else {
-				//		System.out.println("..");
+			if(sessionProps.hasProperty("path")) {
+				cookieString = cookieString+"; path="+sessionProps.getString("path");
 			}
+			addCookie(cookieString);
+			rval = true;
 		}
 		else {
-			//	    System.out.println(".");
+			//		System.out.println("..");
 		}
 		return(rval);
 	}
@@ -694,24 +690,24 @@ public class HTTPAgentRequest extends AgentRequest
 	 *
 	 * If no session ID was found in the client cookies, no cookie will be sent.
 	 */
-	public boolean setSessionCookie(SessionManagerInterface sessionManager, String cookieName)
+	public boolean setSessionCookie(SessionManagerInterface sessionManager, String id, String cookieName)
 	{
 		boolean rval = false;
 
-		String id = getSessionID(cookieName);
-		if(id!=null) {
-			Props sessionProps = sessionManager.getSessionProps(id);
-			if(sessionProps!=null) {
-				String cookieString = cookieName+id;
-				if(sessionProps.hasProperty("expires")) {
-					cookieString = cookieString+"; expires="+sessionProps.getString("expires");
-				}
-				if(sessionProps.hasProperty("path")) {
-					cookieString = cookieString+"; path="+sessionProps.getString("path");
-				}
-				addCookie(cookieString);
-				rval = true;
+		if(id==null) {
+			id = sessionManager.createSession();
+		}
+		Props sessionProps = sessionManager.getSessionProps(id);
+		if(sessionProps!=null) {
+			String cookieString = cookieName+"="+id;
+			if(sessionProps.hasProperty("expires")) {
+				cookieString = cookieString+"; expires="+sessionProps.getString("expires");
 			}
+			if(sessionProps.hasProperty("path")) {
+				cookieString = cookieString+"; path="+sessionProps.getString("path");
+			}
+			addCookie(cookieString);
+			rval = true;
 		}		
 		return(rval);
 	}
@@ -728,21 +724,8 @@ public class HTTPAgentRequest extends AgentRequest
 	{
 		Date rval = null;
 
-		String request = getString("request");
-		String lrequest = request.toLowerCase();
-
-		if(lrequest.indexOf("if-modified-since")!=-1) {
-			int index = lrequest.indexOf("if-modified-since");
-			index = lrequest.indexOf(":",index);
-			request = request.substring(index+1);
-			index = request.indexOf("\n");
-			if(index!=-1) {
-				request = request.substring(0,index).trim();
-			}
-			else {
-				request.trim();
-			}
-
+		if(hasProperty("http_headers:if-modified-since")) {
+			String request = getString("http_headers:if-modified-since");
 			try {
 				rval = WebServer.dateFormat_RFC822.parse(request);
 			}
@@ -789,37 +772,19 @@ public class HTTPAgentRequest extends AgentRequest
 		else {
 			buffer.append("Content-Type: text/html\r\n");
 		}
-		if(cookies!=null) {
-			for(int x=0;x<cookies.size();x++) {
-				buffer.append("Set-Cookie: "+cookies.elementAt(x)+"\r\n");
-			}
-		}
+		buffer.append(getSetCookies());
 		buffer.append("Date: "+WebServer.dateFormat_RFC822.format(new Date())+"\r\n");
 		
 		if(bufferOutput) {
 			if(hasProperty(ConnectionKMethod.KEEP_ALIVE)) {
 				if(hasProperty(ConnectionKMethod.KEEP_ALIVE_FIELD)) {
-					String httpRequest = getString("request").toLowerCase();
-					int index = httpRequest.indexOf("\nconnection");
-					if(index!=-1) {
-						index++;
-						index = httpRequest.indexOf(":",index);
-						if(index!=-1) {
-							httpRequest = httpRequest.substring(index+1);
-							index = httpRequest.indexOf("\n");
-							if(index!=-1) {
-								httpRequest = httpRequest.substring(0,index).trim();
-								keepAlive = httpRequest.equals("keep-alive");
-								if(keepAlive) {
-									buffer.append(getString(ConnectionKMethod.KEEP_ALIVE_FIELD));
-									buffer.append("\nConnection: Keep-Alive\n");
-								}
-								else {
-									// If client doesn't want keep-alive, we must remove this property
-									removeProperty(ConnectionKMethod.KEEP_ALIVE);
-								}
-							}
-						}
+					if(getBoolean("http_headers:connection")) {
+						buffer.append(getString(ConnectionKMethod.KEEP_ALIVE_FIELD));
+						buffer.append("\nConnection: Keep-Alive\n");
+					}
+					else {
+						// If client doesn't want keep-alive, we must remove this property
+						removeProperty(ConnectionKMethod.KEEP_ALIVE);
 					}
 				}
 			}

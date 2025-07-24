@@ -1,0 +1,175 @@
+
+<HTML>
+<HEAD>
+<TITLE>Comet Way Agent Kernel - Release Notes</TITLE>
+<STYLE>
+	A:link {text-decoration: none; font-weight: bold }
+	A:visited {text-decoration: none; font-weight: bold }
+	A:hover {text-decoration: underline; font-weight: bold }
+	H2, H3, H4 { font-family: helvetica }
+	IMG { border: 0 }
+	TT, PRE { font-family: monaco,lucida console,courier }
+	UL { list-style-type: square }
+</STYLE>
+</HEAD>
+<BODY BGCOLOR='#ffffff' LINK='#003399' VLINK='#003399' ALINK='#ff0000'>
+
+<P ALIGN='right'><A href="../README.html">Contents</A></P>
+
+<H2>Release Notes - Version 2.1.2 10-31-2003</H2>
+
+<BLOCKQUOTE>
+	This is a bug-fix release which contains these changes/improvements:
+
+	<UL>
+	<LI>Improved reporting in com.cometway.httpd.ConnectionKMethod
+	<LI>Improved reporting in com.cometway.httpd.LogViewerPage
+	<LI>Fixed problem in com.cometway.util.Base64Encoding byte-conversion problem under Mac OS X
+	<LI>Changed com.cometway.xml.XMLParser "get" to "next" in method names returning XMLTokens
+	<LI>Fixed com.cometway.xml.XMLRequestAgent writeEndTag method to outdent correctly
+	</UL>
+</BLOCKQUOTE>
+
+<H2>Release Notes - Version 2.0</H2>
+	
+<BLOCKQUOTE>
+	Comet Way is proud to release Version 2.0 of the Comet Way Agent Kernel,
+	a release containing many upgrades, and advances which promise a stable
+	and fruitful path for developers using the platform.
+</BLOCKQUOTE>
+
+<BLOCKQUOTE>
+	Here are the highlights:
+	<UL>
+		<LI>new lightweight API for streamed generation and parsing of XML documents
+		<LI>new AgentController model provides a state driven interface to agents
+		<LI>new Agent service manager methods for improved Agent connectivity
+		<LI>new ClassFactory API for the management of agent class loading
+		<LI>new 'ak' command option -reporter specifies the default reporter class
+		<LI>new 'ak' command arguments agent classnames accepted in addition to .agent filenames
+		<LI>new JDBC agents and examples for easy database access
+		<LI>improved javadocs and documentation
+		<LI>new "biolife" agent simulation, originally presented at SummerCon 2001 in Amsterdam
+		<LI>new "robot" agent demo
+		<LI>improved build scripts
+		<LI>jakarta-oro-2.0.5 included for regular expression
+		<LI>many obsolete classes removed
+		<LI>many kinetoscope classes integrated into com.cometway packages
+	</UL>
+</BLOCKQUOTE>
+
+
+<BLOCKQUOTE>
+<H3>Changes</H3>
+	<UL>
+		<LI> move Props-related classes to com.cometway.props
+		<LI> remove kinetoscope source code dependencies
+		<LI> move com.cometway.message package classes to com.cometway.email package
+		<LI> move object manager classes to com.cometway.om package
+		<LI> move StartupAgentBuilder to com.cometway.tools package
+		<LI> move SessionManager classes to com.cometway.om package
+		<LI> move FileLoggerAgent to com.cometway.io package
+		<LI> add convenience methods to Agent
+		<UL>
+		     <LI> register
+		     <LI> registerService
+		     <LI> unregister
+		     <LI> unregisterService
+		     <LI> getServiceImpl
+		     <LI> currentStateEquals
+		</UL>
+		<LI> add AgentController related methods to Agent
+		<UL>
+			<LI>currentStateEquals
+			<LI>setAgentController
+			<LI>getAgentController
+			<LI>getStateMachineModel
+		</UL>
+		<LI> remove getSynchObject method from Agent
+		<LI> add AgentCommand for use with Agent's state model
+		<LI> change agents to use Agent.getServiceImpl over ServiceManager.getService
+		<LI> remove the com.cometway.httpd.Base64Encoding class
+		<LI> updated to jakarta-oro-2.0.5
+		<LI> state machine based kernel
+		<UL>
+			<LI> add setAgentController method to AgentInterface
+			<LI> implement state machine model classes
+			<LI> implement AgentController classes
+		</UL>
+		<LI> update and test demos
+		<LI> add appropriate J2ME required changes
+		<LI> MIME type resolution service for webserver
+		<UL>
+		    <LI> changed HTTPFileServer to use mime_types file
+		    <LI> replace mime_types file
+		</UL>
+		<LI> new Object Manager agents
+		<UL>
+			<LI>ObjectManager is now a ServiceAgent
+			<LI>FileObjectManager is now a ServiceAgent
+			<LI>ObjectCache was removed
+			<LI>ObjectManagerService was removed
+		</UL>
+		<LI> lightweight XML classes
+		<UL>
+		    <LI> com.cometway.xml.XML
+		    <LI> com.cometway.xml.XMLFileParser
+		    <LI> com.cometway.xml.XMLParser
+		    <LI> com.cometway.xml.XMLParserException
+		    <LI> com.cometway.xml.XMLRequestAgent
+		    <LI> com.cometway.xml.XMLToken
+		</UL>
+		<LI> com.cometway.io package
+		<UL>
+			<LI> new class StringBufferOutputStream
+			<LI> new class OutputStreamReporter
+			<LI> new class PrintStreamReporter
+			<LI> new class PushBackBufferedInputStream
+			<LI> VT100ConsoleReporter is no longer an Agent
+		</UL>
+		<LI> com.cometway.jdbc package
+		<UL>
+			<LI> new class JDBCAgent
+			<LI> new class JDBCToXMLAgent
+		</UL>
+		<LI> <I>Set Defaults</I> feature added to Agent Browser
+		<LI> com.cometway.util package
+		<UL>
+			<LI> new class ClassFactoryException
+			<LI> new interface ClassFactoryInterface
+			<LI> new class SystemReporter (to replace Reporter)
+			<LI> DevNullReporter is no longer an Agent
+		</UL>
+	</UL>
+</BLOCKQUOTE>
+
+<HR>
+
+<TABLE WIDTH="100%"><TR>
+<TD VALIGN='top'>
+<FONT SIZE='-1'>
+Copyright &copy; 1999-2003, Comet Way, Inc.<BR>
+</FONT>
+</TD>
+<TD ALIGN='right'><A href="http://www.cometway.com"><IMG src="cometway140.gif" border=0><A></A></TD>
+</TR></TABLE>
+
+</BODY>
+</HTML>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

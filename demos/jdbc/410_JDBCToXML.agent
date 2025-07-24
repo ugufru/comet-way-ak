@@ -1,0 +1,3 @@
+agent_id=410
+classname=com.cometway.jdbc.JDBCToXMLAgent
+table_names=Table1,Table2,Table3

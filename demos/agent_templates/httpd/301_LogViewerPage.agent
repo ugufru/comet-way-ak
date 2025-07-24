@@ -1,0 +1,13 @@
+agent_id=301
+check_interval=600000
+classname=com.cometway.httpd.LogViewerPage
+hide_debug=false
+hide_println=false
+hide_warning=false
+is_logger_data=true
+log_dir=./logs/
+log_file_prefix=httpd_access
+log_map_file=./log.maps
+max_show_log_length=50000
+name=LogViewerPage
+service_name=/logviewer.agent

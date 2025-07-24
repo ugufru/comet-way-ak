@@ -1,0 +1,15 @@
+/dir1/ Directory 1 REALM
+user1 user1pass
+masteruser1 qazmko
+user2 user2pass
+/dir1/subdir2/ D1 Subdir 2 REALM
+superuser superuserpass
+masteruser2 qazmko
+/dir2/subdir3/ D2 Subdir 3 REALM
+user3 user3pass
+masteruser1 qazmko
+user4 user4pass
+/dir2/subdir3/subdir4/ D2 Subdir 4 REALM
+user5 user5pass
+masteruser2 qazmko
+

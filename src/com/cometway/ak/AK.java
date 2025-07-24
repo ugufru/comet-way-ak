@@ -22,7 +22,7 @@ public class AK
 	public static final String PRODUCT_NAME = "Comet Way Agent Kernel";
 
 	/** This is the version of the Agent Kernel */
-	public static final String VERSION_STR = "3.0 Final 04-24-2008 - Patience.";
+	public static final String VERSION_STR = "3.4 Final 07-23-2025 - Java 21.";
 
 	/** This is the proper name and version of the Agent Kernel. */
 	public static final String VERSION_INFO = PRODUCT_NAME + " " + VERSION_STR;
@@ -174,10 +174,16 @@ public class AK
 	{
 		Props p = new Props();
 		String s = getParam(args, "-agent_kernel");
+		String next_agent_id = getParam(args, "-next_agent_id");
 	
 		if (s != null)
 		{
 			p.setProperty("classname", s);
+		}
+
+		if (next_agent_id != null)
+		{
+			p.setProperty("next_agent_id", next_agent_id);
 		}
 
 		p.setDefault("classname", DEFAULT_AGENT_KERNEL);
@@ -266,6 +272,8 @@ public class AK
 
 			for (int i = 0; i < args.length; i++)
 			{
+				String name = args[i];
+
 				if (args[i].startsWith("-hide"))
 				{
 					continue;
@@ -277,7 +285,6 @@ public class AK
 				else
 				{
 					Props p = null;
-					String name = args[i];
 
 					if (name.endsWith(".agent"))
 					{

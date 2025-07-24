@@ -607,7 +607,6 @@ public class StartupEditor extends AbstractJFrameAgent
 			w.write("	public void start()\n");
 			w.write("	{\n");
 			w.write("		Props p;\n");
-			w.write("		AgentControllerInterface a;\n");
 	
 			for (int i = 0; i < agentList.size(); i++)
 			{
@@ -615,13 +614,29 @@ public class StartupEditor extends AbstractJFrameAgent
 
 				if (agentProps.getBoolean("startup"))
 				{
-					String str = agentProps.getString("agent_id") + "_" + agentProps.getString("name");
+					String str = agentProps.getString("agent_id") + "_" + agentProps.getString("name") + " (" + agentProps.getString("classname") + ")";
 		
 					w.write("\n");
 					w.write("		// " + str + "\n\n");
 					w.write("		p = new Props();\n");
+
+					writeProperty(w, agentProps, "agent_id");
+					writeProperty(w, agentProps, "name");
+					writeProperty(w, agentProps, "classname");
 	
 					Vector v = agentProps.getKeys();
+					v.remove("agent_id");
+					v.remove("name");
+					v.remove("classname");
+					v.remove("created");
+					v.remove("modified");
+					v.remove("next_state");
+					v.remove("request_remote_addr");
+					v.remove("request_remote_host");
+					v.remove("startup");
+					v.remove("started");
+
+					Collections.sort(v);
 	
 					for (int x = 0; x < v.size(); x++)
 					{
@@ -629,21 +644,19 @@ public class StartupEditor extends AbstractJFrameAgent
 	
 						if (key.startsWith("#") == false)
 						{
-							String value = agentProps.getString(key);
-	
-							w.write("		p.setProperty(\"");
-							w.write(key);
-							w.write("\", \"");
-							w.write(value);
-							w.write("\");\n");
+							writeProperty(w, agentProps, key);
 						}
 					}
 	
-					w.write("		a = AK.getAgentKernel().createAgent(p);\n");
-					w.write("		if (a != null) a.start();\n");
+					w.write("		startAgent(p);\n");
 				}
 			}
 
+			w.write("	}\n\n\n");
+			w.write("	protected void startAgent(Props p)\n");
+			w.write("	{\n");
+			w.write("		AgentControllerInterface a = AK.getAgentKernel().createAgent(p);\n\n");
+			w.write("		if (a != null) a.start();\n");
 			w.write("	}\n");
 			w.write("}\n\n");
 			w.flush();
@@ -654,6 +667,19 @@ public class StartupEditor extends AbstractJFrameAgent
 			error("Could not write the startup class", e);
 		}
 	}
+
+
+	private void writeProperty(Writer w, Props p, String key) throws Exception
+	{
+		String value = p.getString(key);
+
+		w.write("		p.setProperty(\"");
+		w.write(key);
+		w.write("\", \"");
+		w.write(value);
+		w.write("\");\n");
+	}
+
 
 
 	/**

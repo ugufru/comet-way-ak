@@ -32,6 +32,9 @@ import java.text.SimpleDateFormat;
 public class WebServer extends Agent implements Runnable
 {
 	/* Use these to get return Strings for HTTP/1.1 error codes from RFC 2616 */
+	/** The server responds to a partial request and accepts the partial request, telling the client to continue with its request body.*/
+	public static final int CONTINUE = 100;
+
 	/** The server has fulfilled the request but does not need to return an entity-body, and might want to return updated metainformation. The response MAY include new or updated metainformation in the form of entity-headers, which if present SHOULD be associated with the requested variant. */
 	public static final int NO_CONTENT = 204;
 
@@ -146,7 +149,7 @@ public class WebServer extends Agent implements Runnable
 	protected int numConnections;
 	protected ThreadPool threadPool;
 	protected Thread runThread;
-	protected FileLoggerAgent logger;
+	protected RequestAgent logger;
 
 
 	// used for debugging at the moment
@@ -166,14 +169,12 @@ public class WebServer extends Agent implements Runnable
 	* values fo each of the following missing properties:
 	* 'bind_address' (default: all),
 	* 'bind_port' (default: 80)
-	* 'index_agent' (default: HTTPFileServerAgent)
 	* 'log_requests' (default: true)
 	* 'max_connections' (default: 200)
 	* 'serversocket_queue_size' (default: 50)
 	* 'mime_types_file' (default: mime_types)
 	* 'multihome' (default: false)
 	* 'strict_http_version' (default:false)
-	* 'socket_linger_time' (default: 2000)
 	* 'thread_pool_timeout' (default: 0)
 	* 'use_inet_address_methods' (default: true)
 	* 'socket_timeout' (default:30000)
@@ -182,7 +183,7 @@ public class WebServer extends Agent implements Runnable
 	* 'max_field_length' (default:128)
 	* 'html_response_agent' (default:none)
 	* 'cache_extensions' (default:true)
-	*
+	* 'max_cached_extensions' (default:20)
 	* 'service_name' (default:WebServer-'bind_port')
 	*/
 
@@ -190,14 +191,13 @@ public class WebServer extends Agent implements Runnable
 	{
 		setDefault("bind_address", "all");
 		setDefault("bind_port", "80");
-		setDefault("index_agent", "HTTPFileServerAgent");
 		setDefault("log_requests", "true");
+		setDefault("logger_agent_name","logger_agent");
 		setDefault("max_connections", "200");
 		setDefault("serversocket_queue_size","50");
 		setDefault("mime_types_file", "mime_types");
 		setDefault("multihome", "false");
 		setDefault("strict_http_version","false");
-		setDefault("socket_linger_time", "2000");
 		setDefault("thread_pool_timeout", "0");
 		setDefault("use_inet_address_methods", "true");
 		setDefault("socket_timeout","30000");
@@ -207,6 +207,7 @@ public class WebServer extends Agent implements Runnable
 		setDefault("max_multipart_length","10240000");
 		setDefault("html_response_agent","none");
 		setDefault("cache_extensions","true");
+		setDefault("max_cached_extensions","20");
 
 		setDefault("service_name","WebServer-"+getString("bind_port"));
 	}
@@ -247,7 +248,7 @@ public class WebServer extends Agent implements Runnable
 
 		if (getBoolean("log_requests"))
 		{
-			logger = (FileLoggerAgent) getServiceImpl("logger_agent");
+			logger = (RequestAgent) getServiceImpl(getString("logger_agent_name"));
 
 			println("Logging requests to: " + logger);
 		}
@@ -298,16 +299,23 @@ public class WebServer extends Agent implements Runnable
 	}
 
 
+	/**
+	 * This accepts (or denies) an incoming connecting through the given ServerSocket.
+	 * This method MUST block until a valid connected Socket is returned.
+	 */
+	protected Socket acceptConnection(ServerSocket ssock) throws IOException
+	{
+		return(ssock.accept());
+	}
+
 
 	/**
 	* Starts WebServer, attempts to bind port.
 	*/
-
 	public void run()
 	{
 		String bind_address = getTrimmedString("bind_address");
 		int port = getInteger("bind_port");
-		int socket_linger_time = getInteger("socket_linger_time");
 		int thread_pool_timeout = getInteger("thread_pool_timeout");
 		ServerSocket ssock = null;
 
@@ -338,9 +346,9 @@ public class WebServer extends Agent implements Runnable
 							}
 						}
 					}
-					socket = ssock.accept();
+					socket = acceptConnection(ssock);
 
-					ConnectionKMethod kMethod = new ConnectionKMethod(this, socket, socket_linger_time);
+					ConnectionKMethod kMethod = new ConnectionKMethod(this, socket);
 
 					if(thread_pool_timeout>0) {
 						threadPool.getThreadOrWait(kMethod, thread_pool_timeout);
@@ -516,8 +524,10 @@ public class WebServer extends Agent implements Runnable
 					if(getBoolean("cache_extensions")) {
 						try {
 							WebServerExtension extension = (WebServerExtension)list.get(x);
-							addExtension(domain,extension.getString("agent_id"),extension);
-							debug("Caching: "+extension+" under domain '"+domain+"'");
+							if(extensions.size()<getInteger("max_cached_extensions")) {
+								addExtension(domain,extension.getString("agent_id"),extension);
+								debug("Caching: "+extension+" under domain '"+domain+"'");
+							}
 						}
 						catch(Exception e) {
 							error("Could not cache extension: "+list.get(x),e);
@@ -655,339 +665,345 @@ public class WebServer extends Agent implements Runnable
 				
 				if ((keepAliveField.length() > 0) && keepAliveField.toLowerCase().startsWith("keep-alive"))
 				{
-					conn.append("Connection: Keep-Alive\n");
+					conn.append("Connection: Keep-Alive\r\n");
 					conn.append(keepAliveField);
-					conn.append("\n\n");
+					conn.append("\r\n\r\n");
 				}
 			}
 			
 			if (conn.length() == 0)
 			{
-				conn.append("Connection: close\n\n");
+				conn.append("Connection: close\r\n\r\n");
 			}
 			
-			if(conn.toString().lastIndexOf("\n\n")!=conn.length()-2) {
-				conn.append("\n");
+			if(conn.toString().lastIndexOf("\r\n\r\n")!=conn.length()-2) {
+				conn.append("\r\n");
 			}
 			
-			if(code == NO_CONTENT) {
-				b.append("HTTP/1.1 204 No Content.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+			if(code == CONTINUE) {
+				// The 100 CONTINUE response has no other headers.
+				b.append("HTTP/1.1 100 Continue.\r\n\r\n");
+				//				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
+				//				b.append(conn);
+			}
+			else if(code == NO_CONTENT) {
+				b.append("HTTP/1.1 204 No Content.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				b.append(conn);
 			}
 			else if(code == RESET_CONTENT) {
-				b.append("HTTP/1.1 205 Reset Content.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 205 Reset Content.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				b.append(conn);
 			}
 			else if(code == MOVED_PERMANENTLY) {
-				b.append("HTTP/1.1 301 Moved Permanently.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 301 Moved Permanently.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>301 Moved Permanently</TITLE></HEAD>\n");
 				content.append("<BODY><H1>301 Moved Permanently</H1></BODY>\n");
 				content.append("The requested URL has been permanently moved to another location.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}			
 			else if(code == MOVED) {
-				b.append("HTTP/1.1 302 Moved.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 302 Moved.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>302 Moved</TITLE></HEAD>\n");
 				content.append("<BODY><H1>302 Moved</H1></BODY>\n");
 				content.append("The requested URL has been moved to another location.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}			
 			else if(code == USE_GET) {
-				b.append("HTTP/1.1 303 See Other.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 303 See Other.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>303 See Other</TITLE></HEAD>\n");
 				content.append("<BODY><H1>303 See Other</H1></BODY>\n");
 				content.append("The requested URL has been moved to another location and a GET request must be used to retrieve it.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}			
 			else if(code == NOT_MODIFIED) {
-				b.append("HTTP/1.1 304 Not Modified.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 304 Not Modified.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				b.append(conn);
 			}
 			else if(code == USE_PROXY) {
-				b.append("HTTP/1.1 305 Use Proxy.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 305 Use Proxy.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>305 Use Proxy</TITLE></HEAD>\n");
 				content.append("<BODY><H1>305 Use Proxy</H1></BODY>\n");
 				content.append("The requested URL requires the use of the given proxy.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if(code == TEMPORARY_REDIRECT) {
-				b.append("HTTP/1.1 307 .\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 307 .\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>307 Temporary Redirect</TITLE></HEAD>\n");
 				content.append("<BODY><H1>307 Temporary Redirect</H1></BODY>\n");
 				content.append("The requested URL has been temporarily moved to another location\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}			
 			else if (code == BAD_REQUEST)
 			{
-				b.append("HTTP/1.1 400 Bad Request.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 400 Bad Request.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>400 BAD Request</TITLE></HEAD>\n");
 				content.append("<BODY><H1>400 Bad Request</H1></BODY>\n");
 				content.append("The server could not understand your request.\n");
 				content.append("If this problem persists contact the administrator.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == UNAUTHORIZED)
 			{
-				b.append("HTTP/1.1 401 Unauthorized.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 401 Unauthorized.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>401 Unauthorized</TITLE></HEAD>\n");
 				content.append("<BODY><H1>401 Unauthorized</H1>\n");
 				content.append("You are not authorized to access this url.");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == FORBIDDEN)
 			{
-				b.append("HTTP/1.1 403 Forbidden.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 403 Forbidden.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>403 Forbidden</TITLE></HEAD>\n");
 				content.append("<BODY><H1>403 Forbidden</H1>\n");
 				content.append("The administrator has deemed this area of the server forbidden.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == URL_NOT_FOUND)
 			{
-				b.append("HTTP/1.1 404 URL not found.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 404 URL not found.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>404 URL not found</TITLE></HEAD>\n");
 				content.append("<BODY><H1>404 URL not found</H1>\n");
 				content.append("The URL was not found on the server. \n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == METHOD_NOT_ALLOWED)
 			{
-				b.append("HTTP/1.1 405 Method Not Allowed\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 405 Method Not Allowed\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>405 Method Not Allowed</TITLE></HEAD>\n");
 				content.append("<BODY><H1>405 Method Not Allowed</H1>\n");
 				content.append("The requested method is not allowed.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == ACCEPT_NOT_ALLOWED)
 			{
-				b.append("HTTP/1.1 406 Accept Not Allowed\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 406 Accept Not Allowed\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>406 Accept Not Allowed</TITLE></HEAD>\n");
 				content.append("<BODY><H1>406 Accept Not Allowed</H1>\n");
 				content.append("One or more of the accept content characteristics is not allowed.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == PROXY_AUTHENTICATION_REQUIRED)
 			{
-				b.append("HTTP/1.1 407 Proxy Authentication Required\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 407 Proxy Authentication Required\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>407 Proxy Authentication Required</TITLE></HEAD>\n");
 				content.append("<BODY><H1>407 Proxy Authentication Required</H1>\n");
 				content.append("You must first authenticate with your proxy server first.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == REQUEST_TIMED_OUT)
 			{
-				b.append("HTTP/1.1 408 Request Timed Out.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 408 Request Timed Out.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>408 Request Timed Out</TITLE></HEAD>\n");
 				content.append("<BODY><H1>408 Request Timed Out.</H1>\n");
 				content.append("The webserver did not receive a valid request within the time the server was prepared to wait. Try resending the request.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == REQUEST_CONFLICT)
 			{
-				b.append("HTTP/1.1 409 Conflict.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 409 Conflict.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>409 Request Conflict</TITLE></HEAD>\n");
 				content.append("<BODY><H1>409 Request Conflict.</H1>\n");
 				content.append("The request could not be completed due to a conflict with the current state of the resource.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == GONE)
 			{
-				b.append("HTTP/1.1 410 Gone.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 410 Gone.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>410 Resource No Longer Available</TITLE></HEAD>\n");
 				content.append("<BODY><H1>410 Resource No Longer Available.</H1>\n");
 				content.append("The requested resource is no longer available at the server and no forwarding address is known. This condition is expected to be considered permanent.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == LENGTH_REQUIRED)
 			{
-				b.append("HTTP/1.1 411 Length Required.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 411 Length Required.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>411 Length Required</TITLE></HEAD>\n");
 				content.append("<BODY><H1>411 Length Required.</H1>\n");
 				content.append("The request did not contain a Length field, which is required.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == PRECONDITION_FAILED)
 			{
-				b.append("HTTP/1.1 412 Precondition Failed.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 412 Precondition Failed.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>412 Precondition Failed</TITLE></HEAD>\n");
 				content.append("<BODY><H1>412 Precondition Failed.</H1>\n");
 				content.append("The precondition given in one or more of the request-header fields evaluated to false when it was tested on the server.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == REQUEST_ENTITY_TOO_LARGE)
 			{
-				b.append("HTTP/1.1 413 Request Entity Too Large.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 413 Request Entity Too Large.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>413 Request Entity Too Large</TITLE></HEAD>\n");
 				content.append("<BODY><H1>413 Request Entity Too Large.</H1>\n");
 				content.append("The server is refusing to process a request because the request entity is larger than the server is willing or able to process.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == REQUEST_URI_TOO_LONG)
 			{
-				b.append("HTTP/1.1 414 Request URI Too Long.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 414 Request URI Too Long.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>414 Request URI Too Long</TITLE></HEAD>\n");
 				content.append("<BODY><H1>414 Request URI Too Long.</H1>\n");
 				content.append("The server is refusing to service the request because the Request-URI is longer than the server is willing to interpret.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == UNSUPPORTED_MEDIA_TYPE)
 			{
-				b.append("HTTP/1.1 415 Unsupported Media Type.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 415 Unsupported Media Type.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>415 Unsupported Media Type</TITLE></HEAD>\n");
 				content.append("<BODY><H1>415 Unsupported Media Type.</H1>\n");
 				content.append("The media type given in the request is not supported.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == CANNOT_SATISFY_REQUEST_RANGE)
 			{
-				b.append("HTTP/1.1 416 Cannot Satisfy Request Range.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 416 Cannot Satisfy Request Range.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>416 Cannot Satisfy Request Range</TITLE></HEAD>\n");
 				content.append("<BODY><H1>416 Cannot Satisfy Request Range.</H1>\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == EXPECTATION_FAILED)
 			{
-				b.append("HTTP/1.1 417 Expectation Failed.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 417 Expectation Failed.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>417 Expectation Failed</TITLE></HEAD>\n");
 				content.append("<BODY><H1>417 Expectation Failed.</H1>\n");
 				content.append("The expectation given in an Expect request-header field could not be met by this server.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == SERVER_ERROR)
 			{
-				b.append("HTTP/1.1 500 Server Error.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 500 Server Error.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>500 Server Error</TITLE></HEAD>\n");
 				content.append("<BODY><H1>500 Server Error.</H1>\n");
 				content.append("An internal server error has occured. \n");
 				content.append("Please contact the administrator about this possible problem.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == NOT_IMPLEMENTED)
 			{
-				b.append("HTTP/1.1 501 Not Implemented.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 501 Not Implemented.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>501 Not Implemented</TITLE></HEAD>\n");
 				content.append("<BODY><H1>501 Not Implemented.</H1>\n");
 				content.append("The server does not support the functionality required to fulfill the request.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == BAD_GATEWAY)
 			{
-				b.append("HTTP/1.1 502 Bad Gateway.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 502 Bad Gateway.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>502 Bad Gateway</TITLE></HEAD>\n");
 				content.append("<BODY><H1>502 Bad Gateway.</H1>\n");
 				content.append("The server, while acting as a gateway or proxy, received an invalid response from the upstream server it accessed in attempting to fulfill the request.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == SERVICE_UNAVAILABLE)
 			{
-				b.append("HTTP/1.1 503 Service Unavailable.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 503 Service Unavailable.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>503 Service Unavailable</TITLE></HEAD>\n");
 				content.append("<BODY><H1>503 Service Unavailable.</H1>\n");
 				content.append("The server is currently unable to handle the request due to a temporary overloading or maintenance of the server. Please try again later.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == GATEWAY_TIMEOUT)
 			{
-				b.append("HTTP/1.1 504 Gateway Timed Out.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 504 Gateway Timed Out.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>504 Gateway Timed Out</TITLE></HEAD>\n");
 				content.append("<BODY><H1>504 Gateway Timed Out.</H1>\n");
 				content.append("The server, while acting as a gateway or proxy, did not receive a timely response from the upstream server specified by the URI.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 			else if (code == VERSION_NOT_SUPPORTED)
 			{
-				b.append("HTTP/1.1 505 Version not supported.\n");
-				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\n");
+				b.append("HTTP/1.1 505 Version not supported.\r\n");
+				b.append("Date: "+dateFormat_RFC822.format(new Date())+"\r\n");
 				content.append("<HTML>\n<HEAD><TITLE>505 Version Not Supported</TITLE></HEAD>\n");
 				content.append("<BODY><H1>505 Version Not Supported</H1>\n");
 				content.append("The HTTP Version (HTTP/1.0) is not supported by this server.\n");
 				content.append("Please upgrade your browser to an (HTTP/1.1) compliant HTTP client.\n");
 				content.append("</BODY></HTML>\n");
-				b.append("Content-Length: "+content.length()+"\n");
+				b.append("Content-Length: "+content.length()+"\r\n");
 				b.append(conn);
 			}
 
@@ -1141,7 +1157,6 @@ public class WebServer extends Agent implements Runnable
 	* Determines what the mime type is based off the path,
 	* returns mime type as a String in the HTTP response header.
 	*/
-
 	public static String getMimeType(String path)
 	{
 		String mimeType = "Content-Type: ";
@@ -1171,6 +1186,29 @@ public class WebServer extends Agent implements Runnable
 		}
 
 		return (mimeType);
+	}
+
+	/**
+	 * Returns true of a mime type exists for the given path
+	 */
+	public static boolean hasMimeType(String path)
+	{
+		boolean rval = false;
+		path = path.toLowerCase();
+
+		int index = path.lastIndexOf(".");
+		int slash = path.lastIndexOf("/");
+
+		if (index > slash)
+		{
+			String ext = path.substring(index + 1);
+			String type = mimeTypes.getString(ext);
+			if(type.length()>0) {
+				rval = true;
+			}
+		}
+
+		return(rval);
 	}
 }
 

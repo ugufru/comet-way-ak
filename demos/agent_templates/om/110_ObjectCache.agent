@@ -1,0 +1,4 @@
+agent_id=110
+classname=com.cometway.om.ObjectCache
+name=ObjectCache
+service_name=object_manager

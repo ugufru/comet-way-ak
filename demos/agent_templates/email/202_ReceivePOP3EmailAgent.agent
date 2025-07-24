@@ -1,0 +1,6 @@
+agent_id=202
+classname=com.cometway.email.ReceivePOP3EmailAgent
+hide_debug=false
+hide_println=false
+hide_warning=false
+name=ReceivePOP3EmailAgent

@@ -1,17 +1,17 @@
 
 package com.cometway.text;
 
-import org.apache.oro.text.perl.*;
+import java.util.regex.*;
 
 
 /**
  * A text finder which searches for the first range of text matching
-* a given Regular Expression (PERL 5 reg exp)
+* a given Regular Expression (Java regex)
  */
 
 public class RegExpTextFinder implements ITextFinder
 {
-	private String  pattern;
+	private Pattern  pattern;
 
 
 	/**
@@ -21,7 +21,7 @@ public class RegExpTextFinder implements ITextFinder
 
 	public RegExpTextFinder(String pattern)
 	{
-		this.pattern = "m/" + pattern + "/m";
+		this.pattern = Pattern.compile(pattern, Pattern.MULTILINE);
 	}
 
 
@@ -34,14 +34,12 @@ public class RegExpTextFinder implements ITextFinder
 
 	public RegExpTextFinder(String pattern, boolean ignoreCase)
 	{
+		int flags = Pattern.MULTILINE;
 		if (ignoreCase)
 		{
-			this.pattern = "m/" + pattern + "/im";
+			flags |= Pattern.CASE_INSENSITIVE;
 		}
-		else
-		{
-			this.pattern = "m/" + pattern + "/m";
-		}
+		this.pattern = Pattern.compile(pattern, flags);
 	}
 
 
@@ -58,12 +56,12 @@ public class RegExpTextFinder implements ITextFinder
 
 	public TextFinderResult findText(char[] buffer, int bufferLength, int fromIndex)
 	{
-		Perl5Util       perl = new Perl5Util();
 		String		content = String.valueOf(buffer, fromIndex, bufferLength - fromIndex);
+		Matcher		matcher = pattern.matcher(content);
 
-		if (perl.match(pattern, content))
+		if (matcher.find())
 		{
-			return (new TextFinderResult(perl.beginOffset(0) + fromIndex, perl.endOffset(0) + fromIndex));
+			return (new TextFinderResult(matcher.start() + fromIndex, matcher.end() + fromIndex));
 		}
 
 		return (null);

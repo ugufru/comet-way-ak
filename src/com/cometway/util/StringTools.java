@@ -1,7 +1,12 @@
 
 package com.cometway.util;
 
-import java.util.*;
+
+import java.awt.Dimension;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.util.Enumeration;
+import java.util.Vector;
 
 
 /**
@@ -10,8 +15,243 @@ import java.util.*;
 
 public class StringTools
 {
-	private static final String     kBinHexHeaderString = "(This file must be converted with BinHex";
-	private static final String     kBinHexDecodeString = "!\"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr";
+	private static final String kBinHexHeaderString = "(This file must be converted with BinHex";
+	private static final String kBinHexDecodeString = "!\"#$%&'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr";
+
+
+	/**
+	* Converts a String to a hexadecimal String.
+	*/
+
+	public static String stringToHex(String str)
+	{
+		return byteArrayToHex(str.getBytes());
+	}
+
+
+	/**
+	* Converts a byte array to a hexadecimal String.
+	*/
+
+	public static String byteArrayToHex(byte[] bytes)
+	{
+		StringBuffer b = new StringBuffer();
+
+		for (int i = 0; i < bytes.length; i++)
+		{
+			String s = byteToHex(bytes[i]);
+
+			b.append(s);
+		}
+
+		return (b.toString());
+	}
+
+
+	/**
+	* Returns the ASCII byte representation of the specified byte.
+	*/
+
+	public static String byteToHex(byte b)
+	{
+		String rval = Integer.toHexString((int)(b & 0xFF));
+
+		if (rval.length() == 1)
+		{
+			rval = "0" + rval;
+		}
+
+		rval = rval + " ";
+
+		return(rval.toUpperCase());
+	}
+
+
+	/**
+	 * Takes the intersection of elements in 2 String arrays
+	 */
+	public static Vector intersection(String[] a, String[] b)
+	{
+		Vector all = new Vector();
+		Vector rval = new Vector();
+
+		for(int x=0;x<a.length;x++) {
+			all.addElement(new Pair(a[x],null));
+		}
+		for(int x=0;x<b.length;x++) {
+			all.addElement(new Pair(b[x],null));
+		}
+
+		all = StringTools.pairSort(all);
+		String lastElement = null;
+		for(int x=0;x<all.size();x++) {
+			Pair p = (Pair)all.elementAt(x);
+			if(x!=0) {
+				if(lastElement.equals((String)p.first())) {
+					rval.addElement(lastElement);
+				}
+				else {
+					lastElement = (String)p.first();
+				}
+			}
+			else {
+				lastElement = (String)p.first();
+			}
+		}
+
+		return(rval);
+	}
+
+
+	/**
+	 * Takes the intersection of elements in 3 String arrays
+	 */
+	public static Vector intersection(String[] a, String[] b, String[] c)
+	{
+		Vector all = new Vector();
+		Vector rval = new Vector();
+
+		for(int x=0;x<a.length;x++) {
+			all.addElement(new Pair(a[x],null));
+		}
+		for(int x=0;x<b.length;x++) {
+			all.addElement(new Pair(b[x],null));
+		}
+		for(int x=0;x<c.length;x++) {
+			all.addElement(new Pair(c[x],null));
+		}
+
+		all = StringTools.pairSort(all);
+		boolean second = false;
+		String lastElement = null;
+		for(int x=0;x<all.size();x++) {
+			Pair p = (Pair)all.elementAt(x);
+			if(x!=0) {
+				if(lastElement.equals((String)p.first())) {
+					if(second) {
+						rval.addElement(lastElement);
+						second = false;
+					}
+					else {
+						second = true;
+					}
+				}
+				else {
+					lastElement = (String)p.first();
+					second = false;
+				}
+			}
+			else {
+				lastElement = (String)p.first();
+			}
+		}
+
+		return(rval);
+	}
+
+
+	/**
+	* Converts an int array to a hexadecimal String.
+	*/
+
+	public static String intArrayToHex(int[] ints)
+	{
+		StringBuffer b = new StringBuffer();
+
+		for (int i = 0; i < ints.length; i++)
+		{
+			String s = intToHex(ints[i]);
+
+			b.append(s);
+		}
+
+		return (b.toString());
+	}
+
+
+	/**
+	* Returns the ASCII byte representation of the specified int.
+	*/
+
+	public static String intToHex(int i)
+	{
+		String rval = Integer.toHexString(i);
+
+		if (rval.length() == 1)
+		{
+			rval = "0" + rval;
+		}
+
+		rval = rval + " ";
+
+		return (rval.toUpperCase());
+	}
+
+
+	/**
+	* Returns the ASCII byte representation of the specified integer
+	* padded to 4 bytes.
+	*/
+
+	public static String intToHex4(int i)
+	{
+		String rval = Integer.toHexString(i);
+
+		if (rval.length() == 3)
+		{
+			rval = "0" + rval;
+		}
+		else if(rval.length() == 2)
+		{
+			rval = "00" + rval;
+		}
+
+		if (rval.length() == 1)
+		{
+			rval = "000" + rval;
+		}
+
+		rval = rval.substring(0, 2) + " " + rval.substring(2) + " ";
+
+		return (rval.toUpperCase());
+	}
+
+
+	/**
+	 * This method parses a comma separated String of elements and returns them in an array
+	 */
+	public static String[] commaToArray(String in)
+	{
+		String[] rval = new String[0];
+
+		if(in!=null) {
+			try {
+				Vector v = new Vector();
+				int i = in.indexOf(",");
+				while(i!=-1) {
+					String tmp = in.substring(0,i);
+					v.addElement(tmp.trim());
+					in = in.substring(i+1);
+					i = in.indexOf(",");
+				}
+				if(in.trim().length()>0) {
+					v.addElement(in.trim());
+				}
+				
+				if(v.size()>0) {
+					rval = new String[v.size()];
+					for(int x=0;x<v.size();x++) {
+						rval[x] = (String)v.elementAt(x);
+					}
+				}
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+		return(rval);
+	}
 
 
 	/**
@@ -224,43 +464,6 @@ public class StringTools
 		return (sb.toString());
 	}
 
-	/**
-	 * This method parses a comma separated String of elements and returns them in an array
-	 */
-	public static String[] commaToArray(String in)
-	{
-		String[] rval = new String[0];
-
-		if(in!=null) {
-			try {
-				Vector v = new Vector();
-				int i = in.indexOf(",");
-				while(i!=-1) {
-					String tmp = in.substring(0,i);
-					v.addElement(tmp.trim());
-					in = in.substring(i+1);
-					i = in.indexOf(",");
-				}
-				if(in.trim().length()>0) {
-					v.addElement(in.trim());
-				}
-				
-				if(v.size()>0) {
-					rval = new String[v.size()];
-					for(int x=0;x<v.size();x++) {
-						rval[x] = (String)v.elementAt(x);
-					}
-				}
-			}
-			catch(Exception e) {
-				e.printStackTrace();
-			}
-		}
-
-		return(rval);
-	}
-
-
 
 
 	/**
@@ -281,7 +484,7 @@ public class StringTools
 	 */
 
 
-	public static java.awt.Dimension getDimension(String in)
+	public static Dimension getDimension(String in)
 	{
 		int     index = 0;
 		int     overflow = in.length();
@@ -306,10 +509,10 @@ public class StringTools
 			{
 				if (overflow == 0)
 				{
-					return (new java.awt.Dimension(0, 0));
+					return (new Dimension(0, 0));
 				}
 
-				return (new java.awt.Dimension(overflow, 1));
+				return (new Dimension(overflow, 1));
 			}
 			else
 			{
@@ -421,134 +624,42 @@ public class StringTools
 
 
 	/**
-	 * returns a string without anything matching <*> (all HTML tags)
-	 */
+	* Converts a hexadecimal String to a byte array.
+	*/
 
-	public static String removeHTMLTags(String in)
+	public static byte[] hexToByteArray(String hexString)
 	{
-		int		index = 0;
-		boolean		tag = false;
-		boolean		paren = false;
-		StringBuffer    out = new StringBuffer();
+		byte[] bytes = null;
 
-		while (index < in.length())
+		hexString = hexString.replaceAll("[\\s]", "");
+
+		int count = hexString.length();
+
+		if ((count % 2) == 0)
 		{
-			if (in.charAt(index) == '"')
+			int x = 0;
+			int i = 0;
+
+			bytes = new byte[count / 2];
+
+			while (i < count)
 			{
-				if (tag)
-				{
-					paren = !paren;
-				}
-				else if (!tag && paren)
-				{
-					paren = false;
-				}
+				String s = hexString.substring(i, i + 2);
+				int value = Integer.parseInt(s, 16);
+
+				bytes[x] = (byte) value;
+//System.out.println("\ti(" + i + '-' + (i + 1) + "): " + s + " = " + value);
+
+				 i += 2;
+				 x += 1;
 			}
-
-			if ((!paren) && (in.charAt(index) == '<'))
-			{
-				tag = true;
-			}
-
-			if (!tag)
-			{
-				if (in.charAt(index) == '&')
-				{
-					int     mark = index + 1;
-
-					if (mark < in.length())
-					{
-						if (in.indexOf("lt", mark) == mark)
-						{
-							out.append("<");
-
-							index = mark + 1;
-						}
-						else if (in.indexOf("gt", mark) == mark)
-						{
-							out.append(">");
-
-							index = mark + 1;
-						}
-						else if (in.indexOf("amp", mark) == mark)
-						{
-							out.append("&");
-
-							index = mark + 2;
-						}
-						else if (in.indexOf("quot", mark) == mark)
-						{
-							out.append("\"");
-
-							index = mark + 3;
-						}
-						else if (in.indexOf("nbsp", mark) == mark)
-						{
-							out.append(" ");
-
-							index = mark + 3;
-						}
-						else if (in.indexOf("reg", mark) == mark)
-						{
-							out.append("(R)");
-
-							index = mark + 2;
-						}
-						else if (in.indexOf("copy", mark) == mark)
-						{
-							out.append("(c)");
-
-							index = mark + 3;
-						}
-						else if (in.indexOf("ensp", mark) == mark)
-						{
-							out.append(" ");
-
-							index = mark + 3;
-						}
-						else if (in.indexOf("emsp", mark) == mark)
-						{
-							out.append(" ");
-
-							index = mark + 3;
-						}
-						else if (in.indexOf("endash", mark) == mark)
-						{
-							out.append("-");
-
-							index = mark + 5;
-						}
-						else if (in.indexOf("emdash", mark) == mark)
-						{
-							out.append("-");
-
-							index = mark + 5;
-						}
-						else
-						{
-							out.append(in.charAt(index));
-						}
-					}
-					else
-					{
-						out.append(in.charAt(index));
-					}
-				}
-				else
-				{
-					out.append(in.charAt(index));
-				}
-			}
-
-			if ((!paren) && (in.charAt(index) == '>'))
-			{
-				tag = false;
-			}
-
-			index++;
+		}
+		else
+		{
+			throw new IllegalArgumentException("Invalid hexString length: " + hexString);
 		}
 
-		return (out.toString());
+		return (bytes);
 	}
 
 
@@ -611,58 +722,6 @@ public class StringTools
 		}
 
 		return (rval);
-	}
-
-
-	/**
-	 * Returns a string that is guaranteed to fit within 'length' using a FontMetrics of a graphics.
-	 */
-
-
-	public static String truncateString(java.awt.Graphics g, String inString, int length)
-	{
-		java.awt.FontMetrics    metrics = g.getFontMetrics();
-
-		if (length > metrics.stringWidth(inString))
-		{
-			return (inString);
-		}
-		else
-		{
-			int     dotlength = metrics.stringWidth("...");
-
-			if (dotlength > length)
-			{
-				dotlength = metrics.stringWidth("..");
-
-				if (dotlength > length)
-				{
-					dotlength = metrics.stringWidth(".");
-
-					if (dotlength > length)
-					{
-						return ("");
-					}
-					else
-					{
-						return (".");
-					}
-				}
-				else
-				{
-					return ("..");
-				}
-			}
-			else
-			{
-				while (length <= (metrics.stringWidth(inString) + dotlength))
-				{
-					inString = inString.substring(0, inString.length() - 1);
-				}
-
-				return (inString + "...");
-			}
-		}
 	}
 
 
@@ -841,5 +900,295 @@ public class StringTools
 		return (rval);
 	}
 
+
+	/**
+	 * returns a string without anything matching <*> (all HTML tags)
+	 */
+
+	public static String removeHTMLTags(String in)
+	{
+		int		index = 0;
+		boolean		tag = false;
+		boolean		paren = false;
+		StringBuffer    out = new StringBuffer();
+
+		while (index < in.length())
+		{
+			if (in.charAt(index) == '"')
+			{
+				if (tag)
+				{
+					paren = !paren;
+				}
+				else if (!tag && paren)
+				{
+					paren = false;
+				}
+			}
+
+			if ((!paren) && (in.charAt(index) == '<'))
+			{
+				tag = true;
+			}
+
+			if (!tag)
+			{
+				if (in.charAt(index) == '&')
+				{
+					int     mark = index + 1;
+
+					if (mark < in.length())
+					{
+						if (in.indexOf("lt", mark) == mark)
+						{
+							out.append("<");
+
+							index = mark + 1;
+
+							if(in.charAt(mark+2)==';') {
+								index++;
+							}
+						}
+						else if (in.indexOf("gt", mark) == mark)
+						{
+							out.append(">");
+
+							index = mark + 1;
+
+							if(in.charAt(mark+2)==';') {
+								index++;
+							}
+						}
+						else if (in.indexOf("amp", mark) == mark)
+						{
+							out.append("&");
+
+							index = mark + 2;
+
+							if(in.charAt(mark+3)==';') {
+								index++;
+							}
+						}
+						else if (in.indexOf("quot", mark) == mark)
+						{
+							out.append("\"");
+
+							index = mark + 3;
+
+							if(in.charAt(mark+4)==';') {
+								index++;
+							}
+						}
+						else if (in.indexOf("nbsp", mark) == mark)
+						{
+							out.append(" ");
+
+							index = mark + 3;
+
+							if(in.charAt(mark+4)==';') {
+								index++;
+							}
+						}
+						else if (in.indexOf("reg", mark) == mark)
+						{
+							out.append("(R)");
+
+							index = mark + 2;
+
+							if(in.charAt(mark+3)==';') {
+								index++;
+							}
+						}
+						else if (in.indexOf("copy", mark) == mark)
+						{
+							out.append("(c)");
+
+							index = mark + 3;
+
+							if(in.charAt(mark+4)==';') {
+								index++;
+							}
+						}
+						else if (in.indexOf("ensp", mark) == mark)
+						{
+							out.append(" ");
+
+							index = mark + 3;
+
+							if(in.charAt(mark+4)==';') {
+								index++;
+							}
+						}
+						else if (in.indexOf("emsp", mark) == mark)
+						{
+							out.append(" ");
+
+							index = mark + 3;
+
+							if(in.charAt(mark+4)==';') {
+								index++;
+							}
+						}
+						else if (in.indexOf("endash", mark) == mark)
+						{
+							out.append("-");
+
+							index = mark + 5;
+
+							if(in.charAt(mark+6)==';') {
+								index++;
+							}
+						}
+						else if (in.indexOf("emdash", mark) == mark)
+						{
+							out.append("-");
+
+							index = mark + 5;
+
+							if(in.charAt(mark+6)==';') {
+								index++;
+							}
+						}
+						else if (in.charAt(mark)=='#') {
+							if(in.charAt(mark+1)=='x') {
+								int tmpindex = mark+2;
+								mark = in.indexOf(";",mark);
+								if(mark==-1) {
+									mark = tmpindex+2;
+									index = mark;
+								}
+								else if(mark - tmpindex>2) {
+									mark = tmpindex+2;
+									index = mark;
+								}
+								else {
+									index = mark+1;
+								}
+								out.append((char)Integer.parseInt(in.substring(tmpindex,mark),16));
+							}
+							else {
+								int tmpindex = mark+1;
+								mark = in.indexOf(";",mark);
+								if(mark==-1) {
+									if(Character.isDigit(in.charAt(tmpindex+1))) {
+										mark = tmpindex+2;
+									}
+									if(Character.isDigit(in.charAt(tmpindex+2))) {
+										mark = tmpindex+3;
+									}
+									index = mark;
+								}
+								else if(mark - tmpindex>3) {
+									if(Character.isDigit(in.charAt(tmpindex+1))) {
+										mark = tmpindex+2;
+									}
+									if(Character.isDigit(in.charAt(tmpindex+2))) {
+										mark = tmpindex+3;
+									}
+									index = mark;
+								}
+								else {
+									index = mark+1;
+								}
+								out.append((char)Integer.parseInt(in.substring(tmpindex,mark)));
+							}
+							index--;
+						}
+						else
+						{
+							out.append(in.charAt(index));
+						}
+					}
+					else
+					{
+						out.append(in.charAt(index));
+					}
+				}
+				else
+				{
+					out.append(in.charAt(index));
+				}
+			}
+
+			if ((!paren) && (in.charAt(index) == '>'))
+			{
+				tag = false;
+			}
+
+			index++;
+		}
+
+		return (out.toString());
+	}
+
+
+	/**
+	 * Returns a string that is guaranteed to fit within 'length' using a FontMetrics of a graphics.
+	 */
+
+
+	public static String truncateString(Graphics g, String inString, int length)
+	{
+		FontMetrics metrics = g.getFontMetrics();
+
+		if (length > metrics.stringWidth(inString))
+		{
+			return (inString);
+		}
+		else
+		{
+			int     dotlength = metrics.stringWidth("...");
+
+			if (dotlength > length)
+			{
+				dotlength = metrics.stringWidth("..");
+
+				if (dotlength > length)
+				{
+					dotlength = metrics.stringWidth(".");
+
+					if (dotlength > length)
+					{
+						return ("");
+					}
+					else
+					{
+						return (".");
+					}
+				}
+				else
+				{
+					return ("..");
+				}
+			}
+			else
+			{
+				while (length <= (metrics.stringWidth(inString) + dotlength))
+				{
+					inString = inString.substring(0, inString.length() - 1);
+				}
+
+				return (inString + "...");
+			}
+		}
+	}
+
+
+	/**
+	* Appends zeros to the beginning of the hexString up to maxDigits.
+	*/
+
+	public static String zeroPadHex(String hexString, int maxDigits)
+	{
+		int len = maxDigits - hexString.length();
+
+		for (int i = 0; i < len; i++)
+		{
+			hexString = "0" + hexString;
+		}
+
+		return (hexString);
+	}
 }
+
 

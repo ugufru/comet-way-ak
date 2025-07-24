@@ -1,0 +1,10 @@
+agent_id=204
+classname=com.cometway.email.AutoReplyAgent
+default_reply=This message was sent by an auto-reply agent.
+hide_debug=false
+hide_println=false
+hide_warning=false
+name=AutoReplyAgent
+reply_to=chameleon@cometway.com
+send_email_service_name=send_email
+service_name=chameleon@cometway.com

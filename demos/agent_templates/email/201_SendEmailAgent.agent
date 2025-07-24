@@ -1,0 +1,12 @@
+agent_id=201
+classname=com.cometway.email.SendEmailAgent
+hide_debug=false
+hide_println=false
+hide_warning=false
+max_queue_size=100
+name=SendEmailAgent
+service_name=send_email
+smtp_host=macmail.cometway.com
+smtp_port=25
+smtp_sleep_ms=5000
+smtp_timeout_ms=5000

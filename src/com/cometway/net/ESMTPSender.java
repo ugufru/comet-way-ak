@@ -22,6 +22,7 @@ public class ESMTPSender implements IMessageSender
    //  receiverResponseType will store
    public final static int kSuccess = 2;
    public final static int kFailure = 3;
+   public final static int kTempFailure = 4;
    public final static int kError   = 5;
 	public final static int kAuthFailed = 6;
 
@@ -451,7 +452,7 @@ public class ESMTPSender implements IMessageSender
    
    /** readLine: method reads one response from the SMTP receiver (a response may
     *   consist of multiple lines of text).
-    *  @return: returns true if a response was successfully read and the receiverResponse
+    *  @return returns true if a response was successfully read and the receiverResponse
     *            and receiverResponseCode state variables were correctly set, false
     *            otherwise 
     */
@@ -477,6 +478,7 @@ public class ESMTPSender implements IMessageSender
 		{
 			error("readLine() failed to read: " + e);
 			error("but got this far: " + response);
+			e.printStackTrace();
 
 			throw new ESMTPReadException(response);
       }
@@ -597,16 +599,20 @@ public class ESMTPSender implements IMessageSender
 							break;
 						case 552: // Requested mail action aborted: exceeded storage allocation
 						case 554: // Transaction failed 
+							receiverResponseType = kFailure;
+							break;
 						case 451: // Requested action aborted; local error in processing
 						case 452: // Requested acion not taken; insufficient system storage
 							// not much that we can do about these in the middle of a send
-							receiverResponseType = kFailure;
+							receiverResponseType = kTempFailure;
 							break;
 						}
 					}
 					else receiverResponseType = kCommError;
 					break;
 				case 451:
+					receiverResponseType = kTempFailure;
+					break;
 				case 554:
 					receiverResponseType = kFailure;
 					break;
@@ -801,6 +807,8 @@ public class ESMTPSender implements IMessageSender
 					break;
 				case 451:
 				case 452:
+					receiverResponseType = kTempFailure;
+					break;
 				case 552:
 					receiverResponseType = kFailure;
 					break;
@@ -994,26 +1002,8 @@ public class ESMTPSender implements IMessageSender
    {
 		try
 		{
-			if (sendLine("QUIT") && readLine())
-			{
-				switch (receiverResponseCode)
-				{
-				case 221:
-					receiverResponseType = kSuccess;
-					break;
-				case 500:
-					receiverResponseType = kError;
-					break;
-				default:
-					receiverResponseType = kBadESMTP;
-					break;
-				}
-			}
-			else receiverResponseType = kCommError;
-		}
-		catch (ESMTPReadException er)
-		{
-			throw new ESMTPException(ESMTPException.QUIT);
+			if (!sendLine("QUIT"))
+				receiverResponseType = kCommError;
 		}
 		catch (ESMTPSendException es)
 		{
@@ -1181,6 +1171,8 @@ public class ESMTPSender implements IMessageSender
 				case 450:
 				case 451:
 				case 452:
+					receiverResponseType = kTempFailure;
+					break;
 				case 550:
 				case 553:
 					receiverResponseType = kFailure;

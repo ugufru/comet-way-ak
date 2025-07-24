@@ -1,0 +1,5 @@
+agent_id=112
+classname=com.cometway.om.AgentServer
+name=AgentServer
+om_service_name=object_manager
+service_name=agent_server

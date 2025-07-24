@@ -67,21 +67,25 @@ public class HTTPLoader
 	public String                 httpsProxyServer = null;
 	public int                    httpsProxyServerPort = 0;
 
+	public String charset = "iso-8859-1";
+
 	// Class variables
 	protected Vector		cookieList;
 	protected String		requestProtocol;
 	protected String		requestHost;
 	protected int			requestPort;
 	protected String		requestPath;
-	protected String		requestURL;
+	public String		requestURL;
 	protected Socket		requestSocket;
 	protected HTTPRequest		request;
 	protected long			requestMillis;
-	protected BufferedWriter	requestWriter;
+	protected OutputStream	requestWriter;
 	protected InputStream requestReader;
 	protected HTTPResponse		response;
 	protected int requestDataLength = -1;
 	protected int			recursionCount;
+
+	protected Vector extraHeaders;
 
 	// publicly accessable runtime flags
 	public boolean useReferer = true;
@@ -99,7 +103,6 @@ public class HTTPLoader
 
 	public String key_file = "server.key";
 	public String cert1_file = "newcert.pem";
-
 
 	public HTTPLoader()
 	{
@@ -566,9 +569,35 @@ public class HTTPLoader
 
 
 
+	/**
+	 * Allows you to set the extra headers in a request.
+	 */
+	public void setExtraHeaders(String headers)
+	{
+		if(extraHeaders==null) {
+			extraHeaders = new Vector();
+		}
+		extraHeaders.addElement(headers);
+	}
 
+	/**
+	 * Allows you to set the extra headers in a request.
+	 */
+	public void setExtraHeaders(String name, String value) 
+	{
+		if(extraHeaders==null) {
+			extraHeaders = new Vector();
+		}
+		extraHeaders.addElement(name+": "+value);
+	}
 
-
+	/**
+	 * Removes any extra headers set in the request
+	 */
+	public void removeExtraHeaders()
+	{
+		extraHeaders = null;
+	}
 
 
 
@@ -712,13 +741,94 @@ public class HTTPLoader
 
 	public String postURL(String url)
 	{
-		return (requestURL(url, HTTPRequest.POST_REQUEST_TYPE, null, null, null,null));
+		return (requestURL(url, HTTPRequest.POST_REQUEST_TYPE, "", null, null,null));
 	}
 	public String postURL(String url, OutputStream dataOut)
 	{
-		return (requestURL(url, HTTPRequest.POST_REQUEST_TYPE, null, null, dataOut,null));
+		return (requestURL(url, HTTPRequest.POST_REQUEST_TYPE, "", null, dataOut,null));
 	}
 
+	/**
+	 * Sends a POST request that is multipart-mime body
+	 */
+	public String postURL(String url, Hashtable mimeTypes, Props params)
+	{
+		return(postURL(url,mimeTypes,params,null));
+	}
+
+	public String postURL(String url, Hashtable mimeTypes, Props params, OutputStream dataOut)
+	{
+		String rval = "";
+		if(mimeTypes==null) {
+			mimeTypes = new Hashtable();
+		}
+		try {
+			String boundary = "--------------------------------__"+UUID.randomUUID().toString();
+			while(true) {
+				boolean boundaryOK = true;
+				Enumeration e = params.getKeys().elements();
+				while(e.hasMoreElements()) {
+					if(params.getString((String)e.nextElement()).indexOf(boundary)!=-1) {
+						boundaryOK = false;
+						break;
+					}
+				}
+			
+				if(boundaryOK) {
+					break;
+				}
+				else {
+					boundary = "--------------------------------__"+UUID.randomUUID().toString();
+				}
+			}
+
+			boolean tmp = useContentType;
+			String oldContentTypeString = contentTypeString;
+			useContentType = true;
+			contentTypeString = "multipart/form-data; boundary="+boundary;
+
+			ByteArrayOutputStream tmpOut = new ByteArrayOutputStream();
+			Enumeration e = params.getKeys().elements();
+			while(e.hasMoreElements()) {
+				String paramName = (String)e.nextElement();
+				tmpOut.write(("--"+boundary+"\n").getBytes());
+				tmpOut.write(("Content-Disposition: form-data; name=\""+paramName+"\"").getBytes());
+				if(mimeTypes.containsKey(paramName)) {
+					if(mimeTypes.containsKey(paramName+"_filename")) {
+						tmpOut.write(("; filename=\""+mimeTypes.get(paramName+"_filename")+"\"").getBytes());
+					}
+					tmpOut.write(("\nContent-Type: "+mimeTypes.get(paramName)+"\n\n").getBytes());
+					Object o = params.getProperty(paramName);
+					if(o instanceof byte[]) {
+						tmpOut.write((byte[])o);
+					}
+					else {
+						String s = o.toString();
+						tmpOut.write(s.getBytes());
+						if(s.charAt(s.length()-1)!='\n') {
+							tmpOut.write(("\n").getBytes());
+						}
+					}
+				}
+				else {
+					tmpOut.write(("\n\n"+params.getString(paramName)+"\n").getBytes());
+				}
+			}
+			tmpOut.write(("--"+boundary+"--\n").getBytes());
+			
+			//			System.out.println(new String(tmpOut.toByteArray()));
+			requestDataLength = tmpOut.toByteArray().length;
+			rval = requestURL(url,HTTPRequest.POST_REQUEST_TYPE,null,new ByteArrayInputStream(tmpOut.toByteArray()),dataOut,null);
+
+			contentTypeString = oldContentTypeString;
+			useContentType = tmp;
+		}
+		catch(IOException e) {
+			exception("Error creating multipart-mime request",e);
+		}
+
+		return(rval);
+	}
 
 
 	public String postURL(String url, File postFile, String mimeType)
@@ -951,7 +1061,7 @@ public class HTTPLoader
 				b.append('&');
 			}
 
-			b.append((String) fields.elementAt(i));
+			b.append(HTTPClient.convert((String)fields.elementAt(i)));
 			b.append('=');
 			b.append(HTTPClient.convert((String) values.elementAt(i)));
 		}
@@ -1116,7 +1226,8 @@ public class HTTPLoader
 			debug("Connection timeout set to " + requestTimeout);		// Open a reader and writer to communicate with the server.
 			debug("Opening reader and writer");
 
-			requestWriter = new BufferedWriter(new OutputStreamWriter(requestSocket.getOutputStream()));
+			//			requestWriter = new BufferedWriter(new OutputStreamWriter(requestSocket.getOutputStream()));
+			requestWriter = requestSocket.getOutputStream();
 			requestReader = requestSocket.getInputStream();
 
 			debug("Connection to " + requestHost + ':' + requestPort + " established");
@@ -1267,6 +1378,12 @@ public class HTTPLoader
 
 		int     i = url.indexOf("://");
 
+		// fix ampersands in GET urls
+		while(url.indexOf("&amp;")!=-1) {
+			int index = url.indexOf("&amp;");
+			url = url.substring(0,index+1)+url.substring(index+5);
+		}
+
 		if ((i == -1) && (i < 8))
 		{
 			requestProtocol = "http";
@@ -1393,6 +1510,11 @@ public class HTTPLoader
 			}
 			request.connection = HTTPRequest.CLOSE_CONNECTION;
 			request.otherHeaders = null;
+			if(extraHeaders!=null) {
+				for(int z=0;z<extraHeaders.size();z++) {
+					request.addHeader(extraHeaders.elementAt(z).toString());
+				}
+			}
 			request.requestData = httpParamString;		// Support for sending cookies
 			if(dataIn!=null) {
 				request.dataSource = dataIn;
@@ -1887,6 +2009,29 @@ public class HTTPLoader
 		}
 	}
 
+	/*
+	public static void main(String[] args)
+	{
+		HTTPLoader loader = new HTTPLoader();
+		Hashtable mimeTypes = new Hashtable();
+		mimeTypes.put("param1","text/html");
+		mimeTypes.put("param4","application/octet-stream");
+		mimeTypes.put("param4_filename","smallfile.bin");
+		Props params = new Props();
+		params.setProperty("param1","<HTML>\n\nyo\n\n</HTML>\n");
+		params.setProperty("param2","value2");
+		params.setProperty("param3","value3");
+		byte[] data = new byte[5];
+		data[0]=0x22;
+		data[1]=0x23;
+		data[2]=0x24;
+		data[3]=0x25;
+		data[4]=0x26;
+		params.setProperty("param4",data);
+		System.out.println(loader.postURL("http://www.tesuji.org:8000/blah",mimeTypes,params));
+	}
+
+*/
 	public static void main(String[] args)
 	{
 		if(args.length==0 ||
@@ -1900,6 +2045,7 @@ public class HTTPLoader
 			int index = 0;
 			String url = null;
 			String file = null;
+			boolean showHeaders = false;
 
 			long timer = -1;
 
@@ -1926,6 +2072,12 @@ public class HTTPLoader
 			catch(Exception e) {
 				timer = -1;
 			}
+
+			try {
+				while(!args[++index].equalsIgnoreCase("-headers")) {;}
+				showHeaders = true;
+			}
+			catch(Exception e) {;}
 
 			if(args[0].equalsIgnoreCase("get")) {
 				if(file!=null) {
@@ -2038,13 +2190,18 @@ public class HTTPLoader
 				System.out.println(printHelp());
 			}
 
+			if(showHeaders) {
+				if(loader.response!=null) {
+					System.out.println(loader.response.headers);
+				}
+			}
+
 			//			if(timer!=-1) {
 			//				timer = System.currentTimeMillis()-timer;
 			//				System.out.println("\n\nRequest time: "+timer+" ms");
 			//			}
 		}
 	}
-
 
 
 }

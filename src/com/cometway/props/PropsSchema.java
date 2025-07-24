@@ -4,8 +4,13 @@ package com.cometway.props;
 
 import com.cometway.httpd.HTMLFormWriter;
 import com.cometway.httpd.HTMLStringTools;
+import com.cometway.jdbc.StatementAgentInterface;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -23,7 +28,7 @@ import java.util.Vector;
 * type: button { title, description }
 * type: caption { caption }
 * type: choice { label, options, list }
-* type: date { label, lines, size, list, style }
+* type: date { label, lines, size, list, style, format }
 * type: hidden { value }
 * type: html { label, foramt, size, lines, list }
 * type: integer { label, list }
@@ -31,15 +36,18 @@ import java.util.Vector;
 * type: string { label, lines, size, list }
 * type: space {}
 * type: time { label, lines, size, list, style }
+* type: image { label }
 */
 
 public class PropsSchema
 {
+	protected final static SimpleDateFormat SDF = new SimpleDateFormat("yyyy/MM/dd");
 	protected final static String EOL = System.getProperty("line.separator");
 	protected final static int DEFAULT_SIZE = 96;
 
 
 	protected List schema;
+	protected StatementAgentInterface statementAgent;
 
 
 	/**
@@ -230,6 +238,218 @@ public class PropsSchema
 
 
 	/**
+	* Returns a DateFormat corresponding to the specified format:
+	* short, medium, long, full, or any valid DateFormat string.
+	*/
+
+	public static DateFormat getDateFormat(String format)
+	{
+		DateFormat sdf = SDF;
+
+		if (format.length() > 0)
+		{
+			if (format.equals("short"))
+			{
+				 sdf = DateFormat.getDateInstance(DateFormat.SHORT);
+			}
+			else if (format.equals("medium"))
+			{
+				sdf = DateFormat.getDateInstance(DateFormat.DEFAULT);
+			}
+			else if (format.equals("long"))
+			{
+				sdf = DateFormat.getDateInstance(DateFormat.LONG);
+			}
+			else if (format.equals("full"))
+			{
+				sdf = DateFormat.getDateInstance(DateFormat.FULL);
+			}
+			else
+			{
+				sdf = new SimpleDateFormat(format);
+			}
+		}
+
+		return (sdf);
+	}
+
+
+	/*
+	* RECOGNIZED TYPES:
+	* =================
+	* type: boolean { label, list }
+	* type: button { title, description }
+	* type: caption { caption }
+	* type: choice { label, options, list }
+	* type: date { format, label, lines, size, list, style }
+	* type: file { label }
+	* type: hidden { value }
+	* type: html { label, foramt, size, lines, list }
+	* type: integer { label, list }
+	* type: password { label, size }
+	* type: string { label, lines, size, list }
+	* type: space {}
+	* type: time { label, lines, size, list, style }
+	*/
+
+	public String copyProps(Props fromProps, Props toProps) throws Exception
+	{
+		return (copyProps(fromProps, toProps, false));
+	}
+
+
+	/**
+	* Copies properties from the source to the destination as specified by the schema.
+	* Properties which do not match the specified type, format, or are required but missing, are returned
+	* in a comma separated list of keys.
+	*/
+
+	public String copyProps(Props fromProps, Props toProps, boolean ignorePrimaryKey) throws Exception
+	{
+		StringBuffer b = new StringBuffer();
+		String primaryKey = getPrimaryKey();
+		int count = schema.size();
+
+		for (int i = 0; i < count; i++)
+		{
+			Props fieldProps = (Props) schema.get(i);
+			String key = fieldProps.getString("key");
+			String type = fieldProps.getTrimmedString("type");
+			String format = fieldProps.getTrimmedString("format");
+			boolean required = fieldProps.getBoolean("required");
+			String value = fromProps.getTrimmedString(key);
+			Object o = null;
+
+			if ((ignorePrimaryKey && key.equals(primaryKey)) == false)
+			{
+				try
+				{
+					if (type.equals("html"))
+					{
+						if (format.equals("plaintext"))
+						{
+							o = HTMLStringTools.convertPlainTextToHTML(value);
+						}
+						else
+						{
+							o = value;
+						}
+					}
+
+					else if (type.equals("date"))
+					{
+						if (format.equals("menus"))
+						{
+							int year = fromProps.getInteger(key + "_year");
+							int month = fromProps.getInteger(key + "_month");
+							int day = fromProps.getInteger(key + "_day");
+
+							Calendar cal = Calendar.getInstance();
+
+							cal.set(year, month, day);
+
+							o = cal.getTime();						
+						}
+						else
+						{
+							DateFormat sdf = getDateFormat(format);
+
+							o = sdf.parse(value);
+						}
+					}
+
+					else if (type.equals("integer"))
+					{
+						o = Integer.valueOf(fromProps.getInteger(key));
+					}
+
+					else if (type.equals("boolean"))
+					{
+						o = Boolean.valueOf(fromProps.getBoolean(key));
+					}
+					
+					else if (type.equals("file"))
+					{
+						// This allows us to receive a byte array when files
+						// are submitted to the webserver.
+
+						o = fromProps.getProperty(key);
+						
+						if (o instanceof Hashtable)
+						{
+							Hashtable ht = (Hashtable) o;
+							
+							if (ht != null)
+							{
+								o = ht.get("filedata");
+							}
+							else
+							{
+								o = null;
+							}
+						}
+					}
+					
+					else if (type.equals("address"))
+					{
+						toProps.setProperty(key + "_street", fromProps);
+						toProps.setProperty(key + "_city", fromProps);
+						toProps.setProperty(key + "_zip", fromProps);
+
+						// For the state popup menu, a dash is used
+						// to indicate that no state has been selected.
+
+						if (fromProps.getProperty(key + "_state").equals("-") == false)
+						{
+							toProps.setProperty(key + "_state", fromProps);
+						}
+
+						key = null; // don't need to set anything else below.
+					}
+
+					else if (type.equals("choice"))
+					{
+						// For choices (popup menus) dashes are used
+						// to indicate that no choice has been made.
+
+						if ((value.length() > 0) && (value.equals("-") == false))
+						{
+							o = value;
+						}
+					}
+
+					else
+					{
+						// For all other types, use the String value.
+
+						if (value.length() > 0) o = value;
+					}
+					
+					if (key != null)
+					{
+						toProps.setProperty(key, o);
+
+						if (required && (toProps.hasProperty(key) == false))
+						{
+							b.append(key);
+							b.append(',');
+						}
+					}
+				}
+				catch (Exception e)
+				{
+					b.append(key);
+					b.append(',');
+//					error("Could not convert property \"" + key + "\" (" + value + ") to " + type + " (" + format + ")", e);
+				}
+			}
+		}
+
+		return (b.toString());
+	}
+
+
+	/**
 	* Returns the schema for the specified field.
 	* If more than one schema exists, the first one is returned.
 	*/
@@ -324,6 +544,16 @@ public class PropsSchema
 
 
 	/**
+	* Sets the StatementAgent used for rendering OPTION lists based on a database query.
+	*/
+
+	public void setStatementAgent(StatementAgentInterface agent) throws PropsException
+	{
+		statementAgent = agent;
+	}
+
+
+	/**
 	* Returns the schema as a parseable string.
 	*/
 
@@ -388,7 +618,14 @@ public class PropsSchema
 			w.writeHelp(help);
 		}
 
-		if (type.equals("boolean"))
+		if (type.equals("address"))
+		{
+			int size = fieldProps.getInteger("size");
+
+			w.writeAddressFields(key, p, size);
+		}
+
+		else if (type.equals("boolean"))
 		{
 			w.writeCheckbox(label, key, p.getBoolean(key));
 		}
@@ -410,35 +647,80 @@ public class PropsSchema
 
 		else if (type.equals("choice"))
 		{
-			w.writeSelectHeader(label, key, false);
-
 			String currentValue = p.getString(key);
-			Vector options = fieldProps.getTokens("options");
-			int c = options.size();
+			String format = fieldProps.getString("format");
 
-			for (int j = 0; j < c; j++)
+			if (format.equals("US_STATES"))
 			{
-				String s = (String) options.get(j);
-
-				w.writeSelectItem(s, s, currentValue.equals(s));
+				w.writeSelectUSState(label, key, currentValue);
 			}
+			else
+			{
+				Vector options = fieldProps.getTokens("options");
+				boolean select_multiple = fieldProps.getBoolean("select_multiple");
 
-			w.writeSelectFooter();
+				w.writeSelectHeader(label, key, select_multiple);
+
+				int c = options.size();
+
+				for (int j = 0; j < c; j++)
+				{
+					String s = (String) options.get(j);
+
+					w.writeSelectItem(s, s, currentValue.equals(s));
+				}
+
+				if (format.equals("statement") && (statementAgent != null))
+				{
+					String statement_name = fieldProps.getString("statement_name");
+					String name_key = fieldProps.getString("name_key");
+					String value_key = fieldProps.getString("value_key");
+
+					if (name_key.length() == 0) name_key = "name";
+					if (value_key.length() == 0) value_key = "value";
+
+					List items = statementAgent.executeQuery(statement_name);
+					int count = items.size();
+
+					for (int i = 0; i < count; i++)
+					{
+						Props rp = (Props) items.get(i);
+						String name = rp.getString(name_key);
+						String value = rp.getString(value_key);
+
+						w.writeSelectItem(name, value, currentValue.equals(value));
+					}
+				}
+
+				w.writeSelectFooter();
+			}
 		}
 
-		else if (type.equals("password"))
+		else if (type.equals("date"))
 		{
-			String currentValue = p.getString(key);
-			int size = fieldProps.getInteger("size");
+			String format = fieldProps.getString("format");
 
-			if (size == 0) size = defaultSize;
+			if (format.equals("menus"))
+			{
+				w.writeDateFields(label, key, p);
+			}
+			else
+			{
+				int size = fieldProps.getInteger("size");
+				DateFormat df = getDateFormat(format);
+				String value = p.getDateString(key, df);
 
-			w.writePassword(label, key, currentValue, size);
-		}
+				if (value == null)
+				{
+					w.getAgentRequest().append("field_errors", key + ",");
 
-		else if (type.equals("space"))
-		{
-			w.writeSpace();
+					value = format;
+				}
+
+				if (size == 0) size = defaultSize;
+
+				w.writeField(label, key, value, size);
+			}
 		}
 
 		else if (type.equals("hidden"))
@@ -477,6 +759,26 @@ public class PropsSchema
 			{
 				w.writeMultilineField(label, key, value, size, lines);
 			}
+		}
+
+		else if (type.equals("password"))
+		{
+			String currentValue = p.getString(key);
+			int size = fieldProps.getInteger("size");
+
+			if (size == 0) size = defaultSize;
+
+			w.writePassword(label, key, currentValue, size);
+		}
+
+		else if (type.equals("file"))
+		{
+			w.writeFileUpload(label, key);
+		}
+
+		else if (type.equals("space"))
+		{
+			w.writeSpace();
 		}
 
 		else

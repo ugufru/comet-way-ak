@@ -110,10 +110,6 @@ public class XMLPropsList extends PropsListAgent
 				{
 					List v = propsList.listProps();
 
-//					println("Saving " + v.size() + " records to " + filename + " at " + getDateTimeStr());
-
-//					XMLPropsList.saveToFile(filename, v);
-
 					Props agentProps = new Props();
 					agentProps.setProperty("hide_println", this);
 					agentProps.setProperty("hide_debug", this);
@@ -166,21 +162,6 @@ public class XMLPropsList extends PropsListAgent
 				agent.start();
 				agent.stop();
 				agent.destroy();
-
-//				println("Loading from " + filename + " at " + getDateTimeStr());
-
-//				Vector v = XMLPropsList.loadFromFile(filename);
-
-//				int count = v.size();
-
-//				println("" + count + " records loaded");
-
-//				for (int i = 0; i < count; i++)
-//				{
-//					Props p = (Props) v.get(i);
-//
-//					propsList.addProps(p);
-//				}
 			}
 			catch (Exception e)
 			{
@@ -370,8 +351,6 @@ public class XMLPropsList extends PropsListAgent
 
 		try
 		{
-//			System.out.println("Loading from " + filename);
-
 			in = new FileInputStream(new File(filename));
 			v = parseInputStream(in);
 		}
@@ -409,7 +388,6 @@ public class XMLPropsList extends PropsListAgent
 		}
 
 		String tempfile = filename + ".temp";
-//		System.out.println("Saving to " + tempfile);
 
 		File file = new File(filename);
 		File temp = new File(tempfile);
@@ -434,16 +412,11 @@ public class XMLPropsList extends PropsListAgent
 
 			if (file.exists())
 			{
-//System.out.println("*** deleting: " + file);
 				boolean result = file.delete();
 // This always returns false under Windows 2K...how useful is that?
-
-//System.out.println("*** could not delete " + file + " for some reason");
 			}
 
 			temp.renameTo(file);
-
-//			System.out.println("Saved " + propsList.size() + " items to " + file);
 		}
 		catch (Exception e)
 		{
@@ -492,8 +465,6 @@ public class XMLPropsList extends PropsListAgent
 		out.write(EOL);
 
 		int count = propsList.size();
-
-//		System.out.println("Writing " + count + " time records");
 
 		for (int i = 0; i < count; i++)
 		{

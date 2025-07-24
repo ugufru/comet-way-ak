@@ -1,0 +1,8 @@
+agent_id=305
+authentication_file=./http.authentication
+classname=com.cometway.httpd.HTTPAuthenticationAgent
+hide_debug=false
+hide_println=false
+hide_warning=false
+name=HTTPAuthenticationAgent
+service_name=http_authentication.agent

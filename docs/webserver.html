@@ -1,0 +1,822 @@
+<HTML>
+<HEAD>
+<TITLE>The Comet Way Web Application Server</TITLE>
+<STYLE>
+	A:link {text-decoration: none; font-weight: bold }
+	A:visited {text-decoration: none; font-weight: bold }
+	A:hover {text-decoration: underline; font-weight: bold }
+	H1, H3, H4 { font-family: helvetica }
+	IMG { border: 0 }
+	TT, PRE { font-family: monaco,lucida console,courier }
+	UL { list-style-type: square }
+</STYLE>
+</HEAD>
+<BODY BGCOLOR='#FFFFFF' LINK='#003399' VLINK='#003399' ALINK='#FF0000'>
+
+<P ALIGN='RIGHT'><A HREF='../README.html'>Contents</A></P>
+
+<H1>
+Using the Comet Way Web Application Server
+</H1>
+
+<BLOCKQUOTE>
+
+<A NAME='Overview'><H3>Overview</H3></A>
+
+<BLOCKQUOTE>
+<P>
+The Comet Way HTTP Server is a small and easy to use web server implemented in Java.
+In addition to serving static files, it supports an API similar to the Java Servlet 
+API for serving dynamic web pages.
+<P>
+The WebServer agent listens to a socket and spawns connection handlers to deal 
+with each incoming connection. The WebServer agent also provides a few basic 
+HTTP features like returning ERROR code responses, certain security functions, 
+and determining MIME types of the data served. The connection handler 
+(<TT>com.cometway.http.ConnectionKMethod</TT>) looks at the Agent Kernel's 
+ServiceManager for agents to handle the incoming requests. The basic web server 
+functionality is embodied in the agents provided in Comet Way's HTTP Package, 
+which will register with the service manager to handle most incoming requests. 
+The following sections describe these agents and how to set them up.
+<P>
+</BLOCKQUOTE>
+<hr>
+<P>
+<table>
+<h1>com.cometway.httpd.WebServer</h1>
+Note: Agents that handle HTTP requests must be started by the Agent Kernel 
+before the WebServer agent is started.
+<center>
+<table>
+
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>authentication_agent</b></td>
+<td>This property tells the web server what agent it should look up to handle HTTP authentication.
+By default this property is not set.</td>
+</tr>
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>bind_port</b></td>
+<td>This property tells the web server what port to bind to and accept connections from</td>
+</tr>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>index_agent</b></td>
+<td>This property tells the web server what agent it should use to serve static HTML and
+files. By default, this is set to <i>HTTPFileServerAgent</i> and the ConnectionKMethod
+will look for the agent registered in the ServiceManager under this name. If this is left
+blank or set to an name which is not registered in the ServiceManager, no files will be served.</td> 
+</tr>
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>log_requests</b></td>
+<td>If this property is set to 'true', the WebServer will automatically log requests
+using a LoggerAgent. You must start a com.cometway.io.FileLoggerAgent in the same Agent Kernel as the 
+WebServer if you want to log requests. WebServer log output is compatible with
+the Apache log file format. 
+</td>
+</tr>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>max_connections</b></td>
+<td>This property determines how many simultaneous connections the web server will handle. 
+Any connection made after this number of connection has been reached will hang for the 
+<i>thread_pool_timeout</i> time or when the next available thread can handle it.</td>
+</tr>
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>mime_types_file</b></td>
+<td>This property points the webserver to a file on the local file system which lists the mime_types
+the webserver should return depending on the extension of a URI. An example of what a file like this
+can look like:
+<PRE>
+html=text/html
+htm=text/html
+gif=image/gif
+jpg=image/jpeg
+jpeg=image/jpeg
+c=text/plain
+java=text/plain
+src=text/plain
+tar=application/x-tar
+mp3=audio/x-mpeg
+pdf=application/pdf
+wml=text/vnd.wap.wml
+wmlc=text/vnd.wap.wmlc
+wmls=text/vnd.wap.wmlscript
+wmlsc=text/vnd.wap.wmlscriptc
+wbmp=text/vnd.wap.wbmp
+swf=application/x-shockwave-flash
+wmls=text/vnd.wap.wmlscript
+</PRE>
+If no mime_types_file property exists, then the WebServer will provide itself with a basic set of
+mime types to use, which covers images, text, windows binaries and source code.
+</TD>
+</tr>
+
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>multihome</b></td>
+<td>If this property exists, the WebServer will multihome requests. Multihomed requests are handled
+by agents that register with the AK ServiceManager with the hostname of its home prepended to the
+service name. For example, If there are to be 2 Agents that handle requests on different hosts, the
+WebServer's multihome property must be set, and the first agent registers as <i>www.home1.com-request.agent</i>
+while the second registers as <i>www.home2.com-request.agent</i>. Thus going to http://www.home1.com/request.agent
+will access the first agent, while going to http://www.home2.com/request.agent will access the second.
+</td>
+</tr>
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>proxy_agent</b></td>
+<td>This property tells the web server what agent it should look up to handle HTTP proxies.
+By default this property is not set.</td>
+</tr>
+
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>redirect_agent</b></td>
+<td>This property tells the web server what agent it should look up to handle HTTP redirects.
+By default this property is not set.</td>
+</tr>
+
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>refuse_requests</b></td>
+<td>This property is a comma delimited list of Strings which will cause a request to be instantly refused.
+If any requests is given to the WebServer that contains a String on this list, the WebServer will immediately
+drop the connection.</td>
+</tr>
+
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>socket_linger_time</b></td>
+<td>This property tells the web server how long to let an incoming connection linger
+(after it has already been handled and responded to) before closing the connection</td>
+</tr>
+
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>thread_pool_timeout</b></td>
+<td>This property determines how long the server waits for an available thread to 
+service a request when all the threads in the available pool are in use. The client
+browser will hang during this time until a thread becomes available to handle its
+request - if no threads become available during this time, an error is returned.
+Set this value to 0 if you do not want the server to wait for available threads.
+</td>
+</tr>
+
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>use_inet_address_methods</b></td>
+<td>If this property is set to true, the WebServer logs will include the host IP addresses
+and names. By default, this property is set to false.</td>
+</tr>
+
+
+</table>
+</center>
+</td>
+</tr>
+
+<tr valign=top><td>&nbsp;</td></tr>
+
+<tr>
+<td>
+<H1>com.cometway.httpd.HTTPAuthenticationAgent</H1>
+This agent handles HTTP authentication. A file must be provided to specify
+the user accounts and realms that require authentication.
+<center>
+<table width=90%>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>authentication_file</b></td>
+<td>This property tells the agent what file contains the realms and username/password pairs. 
+The authentication file defines the realms and the usernames and
+passwords which are used to authenticate accesses to the paths
+associated with each realm. The authentication file is delimited
+by newlines and must end with a newline. Each realm is declared
+with a PATH and the REALM name, space seperated, followed by
+usernames and passwords, in pairs which are seperated by a space.
+PATHs must begin with a slash and end with a slash.
+
+<PRE>
+HOSTNAME
+PATH0 REALM0
+username0 password0
+username1 password1
+username2 password2
+username3 password3
+PATH1 REALM2
+username0 password0
+username1 password1
+
+</PRE>
+
+This is an example of an authentication file. There are two realms,
+'My realm' and 'Main Realm'. If any access is made to '/private/' or
+anything recursively under it will require the username 'jonlin' with
+the password 'mainpassword', except for accesses to '/private/mine/',
+which is under the '/private/' path but is its own realm and requires
+its own usernames and passwords. The HOSTNAME field at the beginning
+of the file indicates to the HTTPAuthentication agent what hostname
+the realms should be tied to. For virtual hosts, multiple authentication
+files can be used with a different HOSTNAME field. The default hostname
+is 'default'.
+
+<PRE>
+default
+/private/mine/ My realm
+jonlin jonpassword
+santos halper
+/private/ Main Realm
+jonlin mainpassword
+</PRE>
+</td>
+</tr>
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>service_name</b></td>
+<td>This property tells the HTTPAuthenticationAgent what to register itself as. 
+This name will need to be identical to the <i>authentication_agent</i> property 
+in the web server in order for the web server to use the authentication agent. 
+By default, this is set to <i>http_authentication.agent</i>.</td>
+</tr>
+
+
+
+</table>
+</center>
+</td>
+</tr>
+
+<tr valign=top><td>&nbsp;</td></tr>
+
+<tr>
+<td>
+<H1>com.cometway.httpd.HTTPFileServerAgent</H1>
+This agent serves static HTML and files on the local file system.
+<center>
+<table width=90%>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>allow_directory_lists</b></td>
+<td>By default this property is set to <i>yes</i>, if it is set to anything else this agent will
+not allow viewing of directories. If this property is set to <i>yes</i> the HTTPFileServerAgent
+will dynamically construct an HTML document which lists the files in the directory and return it to
+the browser.</td>
+</tr>
+
+<tr valign=top bgcolor=#AAAAAA><td><b>default_index</b></td>
+<td>This property tells the agent what default index file to look for when the URI given is
+a directory name. This property is set to <i>index.html</i> by default which means if
+a browser requests <i>/public_html/my_stuff/</i>, the HTTPFileServerAgent will 
+look for the file <i>/public_html/my_stuff/index.html</i>.</td>
+</tr>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>html_directory</b></td>
+<td>This property tells the agent what directory tree to serve. By default, this property is set 
+to <i>./</i></td>
+</tr>
+
+
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>service_name</b></td>
+<td>This property tells the agent what name to register itself as. By default, this property
+is set to <i>HTTPFileServerAgent</i>.</td>
+</tr>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>service_url</b></td>
+<td>This property must be set correctly for the HTTPFileServerAgent to work properly. This is the URL
+at which the HTTPFileServerAgent will be serving requests from. It is the root URL (the basename) of
+the webserver that is running it. An example of this property could be <i>http://www.cometway.com/</i>.
+The HTTPFileServerAgent will then know to append and redirect as necessary the links served with this
+URL.
+</td>
+</tr>
+
+</table>
+</center>
+</td>
+</tr>
+
+<tr><td>&nbsp;</td></tr>
+
+<tr>
+<td>
+<H1>com.cometway.httpd.HTTPProxyAgent</H1>
+This agent handles proxies to other web servers. A file needs to be provided which lists the
+URIs which to proxy and where they should be proxied to.
+<center>
+<table width=90%>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>check_interval</b></td>
+<td>The HTTPProxyAgent has an internal check where it pings the web servers on the proxy list. If they
+are not responding, that web server will be removed from the proxy list temporarily. It will be added
+once the HTTPProxyAgent pings it and it is responding. By default, this value is set to 300000, which
+means every 300000 milliseconds, it will check every proxy destination on its list.
+</td>
+</tr>
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>initial_wait_time</b></td>
+<td>This property tells the agent how long to wait before it starts to checking the proxy destinations.
+In the case where you are proxying to yourself, you will need to wait until the WebServer is fully
+initalized and running before the agent should start pinging it. By default this property is set to
+60000, which means it will wait 60000 milliseconds before it starts checking.</td>
+</tr>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>proxy_file</b></td>
+<td>This property tells the agent where to find the proxy file. The proxy file provides a list of
+of the full URLs or URIs to proxy and where they should be proxied to.
+The proxy config file consists of name/value pairs separated by newlines. Lines
+beginning with the # character are ignored as comments. The value of each
+name/value pair must be a full URL. The following are some valid name/value pairs
+that can be used in the config file:
+<PRE>
+/directory=http://www.domain.com/directory.agent
+/dir/page.html=http://www.domain2.com/index.html
+http://www.domain.com/index.html=http://www.domain2.com/index.html
+http://domain.com/index.html=http://www.domain2.com/index.html
+http://www.anotherdomain.com/=http://www.domain2.com:8080/
+</PRE>
+Both the name and the value of each name/value pair is assumed to be literal, so
+they will cnly match the exact path/host of the http request.
+
+<p>
+By default, this property is set to <i>./http.proxy</i></td>
+</tr>
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>service_name</b></td>
+<td>This property tells the agent what name to register itself as. By default, this property
+is set to <i>http_proxy.agent</i>.</td>
+</tr>
+
+</table>
+</center>
+</td>
+</tr>
+
+<tr><td>&nbsp;</td></tr>
+
+
+<tr>
+<td>
+<H1>com.cometway.httpd.HTTPRedirectAgent</H1>
+This agent handles redirects to other web servers. A file needs to be provided which lists the
+URIs which to redirect and what URIs they should be redirected to.
+<center>
+<table width=90%>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>check_interval</b></td>
+<td>The HTTPRedirectAgent has an internal check where it pings the web servers on the redirect list. If they
+are not responding, that web server will be removed from the redirect list temporarily. It will be added
+once the HTTPRedirectAgent pings it and it is responding. By default, this value is set to 300000, which
+means every 300000 milliseconds, it will check every redirect destination on its list.
+</td>
+</tr>
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>initial_wait_time</b></td>
+<td>This property tells the agent how long to wait before it starts to checking the redirect destinations.
+In the case where you are redirecting to yourself, you will need to wait until the WebServer is fully
+initalized and running before the agent should start pinging it. By default this property is set to
+60000, which means it will wait 60000 milliseconds before it starts checking.</td>
+</tr>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>redirect_file</b></td>
+<td>This property tells the agent where to find the redirect configuration file. 
+The format of the configuration file will be name/vaiue pairs separated by newlines.
+Lines beginning with the character <b>#</b> will be ignored as comments.
+There are 2 kinds of name/value pairs used in the redirect config file. The
+first is a direct mapping in the format NAME=VALUE. This mapping tells the
+redirect agent what PATH should be redirected to what PATH. The PATH can
+consist of a full URL or the full URI path. The following are examples of
+valid direct mapped name/value pairs:
+<PRE>
+/page.html=/redirected_page.html
+/directory/=http://www.myotherdomain.com/directory2/
+http://www.mydomain.com/mydir/=http://web1.mydomain.com/mydir2/page.html
+</PRE>
+This, however, would not be a valid name/value pair:
+http://www.domain.com/page.html=/page2.html
+A direct mapped name which contains a host must have a host in its value.
+A direct mapping will not recurse subdirectories in a path and each path
+is regarded as literal. Direct mapped names can by mapped to multiple values
+if more than one name/value pair have the same name. The redirect agent will
+cycle through the different paths given as the value.
+<PRE>
+/index.html=http://www.server1.com/page1.html
+/index.html=http://www.server2.com/page2.html
+/index.html=http://www.server3.com/page3.html
+</PRE>
+
+The second kind of mapping maps only hosts to hosts, and passes the path along
+for the mapped host. This is an example of a host mapping:
+http://myhost.com>http://www.myhost.com
+<p>
+No path information is included in the syntax of this mapping, only the host
+names. Any path intended for myhost.com will be mapped to the host
+www.myhost.com. This mapping is especially useful when the webserver is
+multihomed. Multiple hosts can all by mapped to a single host.
+Cycles in the redirect mappings are not checked, if the redirect mapping has cycles
+there will be an infinite loop of redirects.
+
+
+
+By default, this property is set to
+<i>./http.redirect</i>.</td>
+</tr>
+
+
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>service_name</b></td>
+<td>This property tells the agent what name to register itself as. By default, this property
+is set to <i>http_redirect.agent</i>.</td>
+</tr>
+
+</table>
+</center>
+</td>
+</tr>
+
+<tr><td>&nbsp;</td></tr>
+
+<tr>
+<td>
+<H1>com.cometway.httpd.LogViewerPage</H1>
+This agent registers itself into the ServiceManager and accepts http
+requests to view information stored in log files. Given a directory,
+this agent will look for all the files in that directory and treat
+them as log files. The agent uses a mapping which provides information
+about how these files should be displayed. The logfile mapping maps
+a name to a text pattern. The agent will display the names and the
+matching lines of the log files.
+<center>
+<table width=90%>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>check_interval</b></td>
+<td>All requests to view the actual lines of log files are processed
+in real time, that is to say, the log files are searched when a request
+to view certain lines of all the log files are recieved. However,
+counts are given and recorded regularly. This property tells this agent
+how often to update this count in milliseconds.
+</td>
+</tr>
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>is_logger_output</b></td>
+<td>If this property is set to 'true', the LogViewerPage will assume
+that the log files are generated by the WebServer's LoggerAgent and
+the formatting of some of the pages when lines of log files are used
+will be a little more readable.</td>
+</tr>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>log_dir</b></td>
+<td>This property tells the LogViewerPage where to look for the log files.
+This agent will assume that all files in this given directory are log files.
+</td>
+</tr>
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>log_map_file</b></td>
+<td>This is the logfile mappings. This file should contain names mapped
+to text patterns. For example, a typical map file may look like this:
+<pre>
+Total requests=GET
+LogViewer requests=GET /logviewer.agent
+</pre>
+When the LogViewerPage is brought up on a browser, the summaries will
+show 2 fields, 'Total requests' and 'LogViewer requests'. The number of
+lines that matches the pattern '<i>GET</i>' will be counted and included 
+in the first field. The number of lines that matches the pattern '<i>GET /logviewer.agent</i>'
+will be counted and included in the second field. 
+</td>
+</tr>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>max_show_log_length</b></td>
+<td>This is the maximum length of data that will be shown when a request
+to view log output is received. Since there may possibly be megabytes of
+log files, if a request to show all logged requests is given, the
+LogViewerPage will only show the number of bytes given by this property.
+</td>
+</tr>
+
+
+<tr valign=top bgcolor=#AAAAAA>
+<td><b>service_name</b></td>
+<td>This is the name which to register to the ServiceManager. This is
+also the name that will be used to access this agent from a browser.</td>
+</tr>
+
+<tr valign=top bgcolor=#DDDDDD>
+<td><b>show_memory_usage</b></td>
+<td>If this property is set to true, the LogViewerPage will show the memory usage of the
+WebServer when you access this agent.
+</td>
+</tr>
+
+
+</table>
+</center>
+</td>
+</tr>
+
+
+</table>
+
+<p>
+<hr>
+<p>
+
+<H1>Other Files</H1>
+<table>
+<tr valign=top>
+<td><b>HTTPAgentRequest</b></td>
+<td>This file is an extension of the com.cometway.ak.AgentRequest class.
+The Props of the HTTPAgentRequest include any POST cgi parameters that
+were submitted with the HTTP request. <p> The following code shows how
+to retrieve the POST cgi parameters if the submitted parameters are 
+'<tt><b>param1=value1&amp;param2=value2</tt></b>':
+<PRE>
+// We start with an AgentRequest, so first
+// we cast it to an HTTPAgentRequest
+HTTPAgentRequest agentRequest = (HTTPAgentRequest)request;
+
+String value1 = agentRequest.getString(&quot;param1&quot;);
+String value2 = agentRequest.getString(&quot;param2&quot;);
+</PRE>
+<p>
+The WebServer includes a number of useful properties with the 
+HTTPAgentRequest object passed to agents.
+These are:
+<table>
+<tr valign=top bgcolor=#DDDDDD>
+<td>
+request
+</td><td>
+This is the entire HTTP/1.0 or HTTP/1.1 request that the WebServer recieved.
+</td>
+</tr>
+<tr valign=top bgcolor=#AAAAAA><td>
+request_type</td><td>
+Agents that use AgentRequests set this property by convention to distinguish 
+between different types of requests. Requests passed by the WebServer are set 
+to 'HTTP', since the WebServer handles HTTP requests.
+</td>
+</tr>
+<tr valign=top bgcolor=#DDDDDD><td>
+path</td><td>
+This is the URI of the HTTP request that the webserver recieved. This 
+property will include any GET cgi parameters included within the URI.
+</td></tr>
+<tr valign=top bgcolor=#AAAAAA><td>
+request_server_name</td><td>
+This is the hostname of the server that recieved the HTTP request.
+Depending on how your runtime environment is set up, this may be 
+<i>localhost</i>.
+</td></tr>
+<tr valign=top bgcolor=#DDDDDD><td>
+request_server_port</td><td>
+This is the port (a numeric value) which the server is running on. 
+Append a ':' and this number to the end of <i>request_server_name</i> 
+to load the server's <tt>default_index</tt> page. The default port
+for web servers is port 80.
+</td></tr>
+<tr valign=top bgcolor=#AAAAAA><td>
+request_remote_host</td><td>
+This is the hostname of the machine that submitted the HTTP/1.0 or HTTP/1.1 
+request to the WebServer. This property is not used if the WebServer's 
+<i>use_inet_address_methods</i> property is set to false.
+</td></tr>
+<tr valign=top bgcolor=#DDDDDD><td>
+request_remote_address</td><td>
+This is the IP address of the machine that sent the HTTP/1.0 or HTTP/1.1
+request to the WebServer. This property is associated with the 
+<i>request_remote_hosts</i> property. This property is not used if the
+WebServer's <i>use_inet_address_methods</i> property is set to false.
+</td></tr>
+</table>
+<p>
+The HTTPAgentRequest class provides three additional features that 
+AgentRequest does not.
+<UL>
+<LI>It provides an automatic HTTP response header. If the first String 
+written to the HTTPAgentRequest does not start with 'HTTP', the 
+HTTPAgentRequest will automatically prepend the string '<tt><b>HTTP/1.1 200 
+Ok'</tt></b>. It is assumed that if your agent does not provide any error 
+response, the response should be a 200 (the "everything worked as 
+expected" response). If your agent always provides an HTTP response 
+header, then the HTTPAgentRequest will prepend nothing and your agent's 
+response is used.
+<LI>It provides a way to cache all the output to be sent to a client 
+browser and waits until it has all of the response before responding to 
+the browser. To use this feature, set the public field 
+<tt>HTTPAgentRequest.bufferOutput</tt> to true before writing to the 
+HTTPAgentRequest (via the <tt>HTTPAgentRequest.print()</tt> or <tt>
+println()</tt> methods). When this flag is set to true, anything written 
+via the print() and println() methods will be cached until the <tt>
+HTTPAgentRequest.close()</tt> method is called. Calling this method 
+indicates to the HTTPAgentRequest that the agent handling the request 
+is finished and all cached data is ready to be sent to the client. The 
+HTTPAgentRequest will provide a valid HTTP/1.1 response header with the 
+appropriate MIME type for the file and a <tt>Content-Length</tt> header 
+field with the length of the data if a header is not provided with the 
+response.
+<LI>In the event of slow connections or connections with heavy packet 
+loss, HTTPAgentRequest has a field called 
+<tt>HTTPAgentRequest.byteWiseWriting</tt>. 
+If this flag is set to true, the HTTPAgentRequest will write to the client 
+a byte at a time instead of sending large chunks of data to the client.
+</UL>
+</td>
+</tr>
+<tr valign=top>
+<td><b>ConnectionKMethod</b></td>
+<td>This class implements the core of the HTTP protocol. It handles and 
+interprets a browser's HTTP/1.0 or HTTP/1.1 request header and body and 
+determines what to do with it. It will determines what agent will be 
+used to handle the request, creates an <i>HTTPAgentRequest</i> object, 
+and hands it off to the agent. Whatever this agent prints to the 
+AgentRequest will be sent to the client's browser.</td>
+</tr>
+
+<tr valign=top>
+<td><b>Base64Encoding</b></td>
+<td>This helper class contains the MIME/64 encoding and decoding methods 
+used when dealing with password authentication. These methods can be used 
+by any agent to encode or decode as needed.</td>
+</tr>
+
+<tr valign=top>
+<TD><b>HTTPExampleAgent</b></td>
+<TD>This RequestAgent receives requests and replies with a short message. 
+It is intended to be used as a template or for testing purposes.</td>
+</tr>
+</table>
+<p>
+<hr>
+<p>
+
+<H1>Writing Your Own Agents</H1>
+Implementing your own agents and accessing them from the Comet Way 
+WebServer is easy; your agent must extend the <tt>
+com.cometway.ak.RequestAgent</tt> class and you must implement the <tt>RequestAgent.handleRequest(AgentRequest)</tt> method. When you 
+start the web server, include startup properties for your custom agent 
+and have it register in the ServiceManager by including a <tt>
+service_name</tt> property. 
+<p>
+Access the agent through the web server by typing the name that your 
+agent registered with in the ServiceManager as the URI. As long as you 
+register using a name that ends with <i>.agent</i>, the server will 
+route requests that match your <tt>service_name</tt> to your an agent 
+and not to the HTTPFileServerAgent (which will look for a static file 
+on the local file system that matches the request.)
+<p>
+For example, I wrote the following agent:
+<br>
+<br>
+<center>
+<table width=90%><tr><td><pre>
+public class MyRequestAgent extends RequestAgent
+{
+   public void init()
+   {
+      setDefault(&quot;service_name&quot;,&quot;/my_agent.agent&quot;);
+   }
+
+   public void handleRequest(AgentRequest request)
+   {
+      request.println(&quot;This is my request Agent!&quot;);
+   }
+}
+</pre></td></tr></table>
+</center>
+...and started it with the WebServer. When I submit a request for <tt><b>
+http://localhost/my_agent.agent</b></tt>, I see this output in my browser:
+<br>
+<br>
+<b>This is my request Agent!</b>.
+<br>
+<br> 
+If I were to register my agent as <i>/my_agents/MyRequestAgent.agent
+</i>, then I would need to access 
+<i>http://localhost/my_agents/MyRequestAgent.agent</i> to see the text 
+in my browser.
+<p>
+CGI parameters are passed to the handleRequest method in the AgentRequest
+object's Props. For example, if I access with my browser
+<i>http://localhost/my_agent.agent?param1=value1&amp;param2=value2</i>,
+then I will see 2 properties in the Props object returned by <tt><b>
+AgentRequest.getProps()</b></tt> : one named <i>param1</i> whose value 
+is the String <i>value1</i>, and the other named <i>param2</i> whose value
+is the String <i>value2</i>. If I were to access with my browser
+<i>http://localhost/my_agent.agent?param=value1&amp;param=value2</i>,
+then I will see 1 property in the Props object whose name is <i>param</i>
+and whose value is a Vector containing the 2 Strings (in order) <i>value1
+</i> and <i>value2</i>.
+
+<p>
+Your agents may return their own result codes and response headers if the 
+first thing they print through the HTTPAgentRequest is <b>HTTP/</b>, followed 
+by the HTTP version (1.0/1.1) and the result code (200/304/404/500/etc), then 
+followed by the response headers of your choice. The HTTPAgentRequest can 
+also be made to buffer everything that is printed to it until the <tt>close()
+</tt> method is called.
+<p>
+The Props of the HTTPAgentRequest stores data from the request. If CGI 
+parameters exist, their values can be retrieved from the Props using
+the CGI parameter's name. Your agent can use any name for CGI parameters 
+except for those named below, which are reserved for the specified purpose:
+<PRE>
+request                // The complete request header that was recieved 
+                       // by the client.
+request_type           // The protocol which the request is using.
+path                   // The path (URI) of the request.
+request_server_name    // The hostname of the local machine.
+request_server_port    // The port which the server is bound to.
+host                   // This is the hostname that the HTTP request was 
+                       // submitted to and for which the path is bound to.
+
+// These three properties are only set if the 
+// use_inet_address_methods property is set to true.
+request_remote_host    the hostname of the client
+request_remote_addr    the IP address of the client
+request_id             the request ID
+</PRE>
+If you start a SessionManager agent and create sessions for each user, you 
+have the option of tracking the sessions using cookies. Cookies can be 
+written or read from the HTTPAgentRequest via the <b><tt>getCookies()</tt>
+</b>, <b><tt>addCookie(String)</tt></b>, <tt><b>getSessionID()</b></tt>, 
+<b><tt>getSessionID(String)</tt></b>, <tt><b>
+setSessionCookie(SessionManagerInterface)</b></tt>, and <tt><b>
+setSessionCookie(SessionManagerInteface,String)</b></tt>. See the javadocs 
+for HTTPAgentRequest for a more detailed description of these methods and 
+how to use them. 
+<p>
+The HTTPExampleAgent, a small agent similar to the example given here, can
+be used as a template for starting your first agents. It can also be used
+to test if your other related services are configured correctly.
+<hr>
+<p>
+
+<H1>Multi-Homing and Secure Connections</H1>
+The Comet Way web server supports multi-homing (virtual hosts) functionality, 
+so one webserver can serve different pages or websites for multiple domain 
+names. To use multi-homing, the <TT><B>multihome</B></TT> property of <TT>
+com.cometway.httpd.WebServer</TT> must be set to true. Agents that serve 
+HTML or handle requests for a specific hostname must include the host in 
+their <tt>service_name</tt> property. Here are some examples of valid <TT>
+service_name</TT> configurations:
+<PRE>
+http://www.server.org/homepage.agent
+http://www.server.org:8080/homepage.agent
+https://www.server.org/homepage.agent
+www.server.org/homepage.agent
+www.server.org:8080/homepage.agent
+/homepage.agent
+</PRE>
+The HTTPAuthenticationAgent, HTTPRedirectAgent and the HTTPProxyAgent can 
+all be used in conjunction with your multihoming setup by including domain 
+names in the appropriate configuration files. See the examples listed above 
+for more detail on the syntax of these files.
+<p>
+The JDK1.4 release of libraries provides an implementation of secure sockets 
+layer (SSL) sockets that is used in <TT>com.cometway.httpd.SecureWebServer</TT> 
+to provide secure encrypted communications. This agent uses the properties <tt>
+server_certificate</tt> and <tt>server_key</tt>) which hold the path to the 
+certificate and private key files needed for SSL communications. The test 
+certificates provided in the <tt>/demos/webserver directory</tt> are not signed
+by a commercial CA; they were generated using <a href="http://www.openssl.org">
+openssl</a>. You may generate your own certificates or purchase trusted 
+certificates directly from Comet Way or from another certificate authority. 
+<P>
+<hr>
+<p>
+
+<TABLE WIDTH="100%"><TR>
+<TD VALIGN='top'>
+<FONT SIZE='-1'>
+Copyright &copy; 1999-2003, Comet Way, Inc.<BR>
+</FONT>
+</TD>
+<TD ALIGN='right'><A href="http://www.cometway.com"><IMG src="cometway140.gif" border=0><A></A></TD>
+</TR></TABLE>
+<BLOCKQUOTE></BLOCKQUOTE>
+<BLOCKQUOTE></BLOCKQUOTE>
+
+</BODY>
+</HTML>
+

@@ -43,9 +43,20 @@ public class DateTools
 
 	public static Date parseISO8601String(String dateStr) throws ParseException
 	{
-		dateStr = dateStr.replace('T', ' ');
+		Date d = null;
 
-		return (ISO8601_DATETIMEFORMAT.parse(dateStr));
+		if (dateStr.indexOf('T') >= 0)
+		{
+			dateStr = dateStr.replace('T', ' ');
+
+			d = ISO8601_DATETIMEFORMAT.parse(dateStr);
+		}
+		else
+		{
+			d = ISO8601_DATEFORMAT.parse(dateStr);
+		}
+
+		return (d);
 	}
 
 

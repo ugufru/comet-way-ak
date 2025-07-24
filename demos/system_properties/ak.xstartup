@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<props_list>
+	<props>
+		<agent_id>100</agent_id>
+		<classname>SystemPropertiesAgent</classname>
+		<hide_debug>false</hide_debug>
+		<hide_println>false</hide_println>
+		<hide_warning>false</hide_warning>
+		<name>SystemPropertiesAgent</name>
+		<startup><base64>rO0ABXNyABFqYXZhLmxhbmcuQm9vbGVhbs0gcoDVnPruAgABWgAFdmFsdWV4cAH==</base64></startup>
+	</props>
+</props_list>

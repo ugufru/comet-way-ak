@@ -362,7 +362,7 @@ public class Schedule implements ISchedule
 
 	/**
 	 * This returns the next date something is supposed to happen according to the schedule
-	 * @param staringAt This is the reference date and time which to base results
+	 * @param startingAt This is the reference date and time which to base results
 	 * @return This returns the next Date which something is supposed to happen
 	 */
 
@@ -375,7 +375,7 @@ public class Schedule implements ISchedule
 
 	/**
 	 * This returns the next date something is supposed to happen according to the schedule
-	 * @param staringAt This is the reference date and time which to base results
+	 * @param startingAt This is the reference date and time which to base results
 	 * @param recurse A panic detector. 
 	 * @return This returns the next Date which something is supposed to happen
 	 */

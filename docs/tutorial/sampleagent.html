@@ -1,0 +1,319 @@
+
+<HTML>
+<HEAD>
+<TITLE>Sample Agent Tutorial</TITLE>
+<STYLE>
+	A:link {text-decoration: none; font-weight: bold }
+	A:visited {text-decoration: none; font-weight: bold }
+	A:hover {text-decoration: underline; font-weight: bold }
+	H2, H3, H4 { font-family: helvetica }
+	IMG { border: 0 }
+	TT, PRE { font-family: monaco,lucida console,courier }
+	UL { list-style-type: square }
+</STYLE>
+</HEAD>
+<BODY BGCOLOR='#FFFFFF' LINK='#003399' VLINK='#003399' ALINK='#FF0000'>
+
+<P ALIGN='RIGHT'><A HREF='../README.html'>Contents</A></P>
+
+<H2>
+Tutorial for Sample Agent! (Agent Anatomy 102)  
+</H2>
+
+<BLOCKQUOTE>
+
+<A NAME='Overview'><H3>Overview</H3></A>
+
+<BLOCKQUOTE>
+	This is a sample agent to demonstrate some of the more common agent methods including the use of <TT>println</TT>, <TT>debug</TT>, 
+    <TT>warning</TT> and <TT>error</TT> methods, as well as some examples of using the agent Props to store and retrieve data:
+
+    <P>
+    <TABLE width="95%" bgColor=#222222><TBODY>
+    <TR><TD><FONT color=#dddddd><PRE>
+
+
+import com.cometway.ak.*;
+
+/**
+* This is a sample agent to demonstrate some of the more common agent methods
+* including the use of println, debug, warning, and error methods, as well
+* as some examples of using the agent Props to store and retrieve data.
+*/
+
+public class SampleAgent extends Agent
+{
+	public void initProps()
+	{
+		println("Initializing properties.");
+
+		setDefault("test_message", "This is a test message.");
+		setDefault("test_value", "42");
+	}
+
+
+	public void start()
+	{
+		println("Use the println method to log agent progress.");
+		debug("Use the debug method to log debugging activity.");
+		warning("Use the warning method to report non-critical errors.");
+		error("Use the error method to report fatal errors.");
+
+		println("Testing the agent props...");
+
+		String test_message = getString("test_message");
+		int test_value = getInteger("test_value");
+
+		debug("test_message = " + test_message);
+		debug("test_value   = " + test_value);
+
+		println("Use the error method to report an exception...");
+
+		try
+		{
+			throw new NullPointerException("test exception");
+		}
+		catch (Exception e)
+		{
+			error("There was a problem", e);
+		}
+
+		println("Props has automatic type conversion and other conveniences...");
+
+		long long_val = getLong("test_value");
+		long_val *= 2;
+		setLong("test_value", long_val);
+		debug("test_value   = " + getString("test_value"));
+		incrementInteger("test_value");
+		debug("test_value   = " + getString("test_value") + " ($" + getHexString("test_value") + ")");
+
+		append("test_message", " This was appended.");
+		debug("test_message = " + getString("test_message"));
+	}
+
+
+	public void stop()
+	{
+		println("A stop request has been received.");
+		println("It is the agent's responsibility to cease its own operation.");
+	}
+
+
+	public void destroy()
+	{
+		println("Cleaning up before this agent instance is destroyed.");
+	}
+}     
+
+		</PRE></FONT>
+		</TD></TR>
+		</TBODY></TABLE>
+<P>
+Running <TT>SampleAgent</TT> produces output similar to the following: 
+<P align=center>
+		<TABLE width="95%" bgColor=#222222>
+		<TBODY><TR><TD><FONT color=#dddddd>
+		<PRE>
+J:\ak\demos\sample_agent>ak
+[AK] Comet Way Agent Kernel 1.3.1 Preview 02-08-2002
+[000_AgentKernel] Starting on 2002/02/08 16:27:08.322 EST
+[000_AgentKernel] Creating agent com.cometway.ak.StartupAgent
+[001_StartupAgent] Starting on 2002/02/08 16:27:08.342 EST
+[001_StartupAgent] Loading agents from .
+[001_StartupAgent] Starting ./100_SampleAgent.startup
+[000_AgentKernel] Creating agent SampleAgent
+[100_SampleAgent] Initializing properties.
+[100_SampleAgent] Starting on 2002/02/08 16:27:08.403 EST
+[100_SampleAgent] Use the println method to log agent progress.
+(100_SampleAgent) Use the debug method to log debugging activity.
+?100_SampleAgent? Use the warning method to report non-critical errors.
+!100_SampleAgent! Use the error method to report fatal errors.
+[100_SampleAgent] Testing the agent props...
+(100_SampleAgent) test_message = This is a test message.
+(100_SampleAgent) test_value   = 42
+[100_SampleAgent] Use the error method to report an exception...
+!100_SampleAgent! There was a problem
+java.lang.NullPointerException: test exception
+        at SampleAgent.start(SampleAgent.java:41)
+        at com.cometway.ak.AgentKernel.startAgent(AgentKernel.java:274)
+        at com.cometway.ak.StartupAgent.start(StartupAgent.java:122)
+        at com.cometway.ak.AgentKernel.startAgent(AgentKernel.java:274)
+        at com.cometway.ak.AgentKernel.start(AgentKernel.java:240)
+        at com.cometway.ak.AgentKernel.startAgent(AgentKernel.java:274)
+        at com.cometway.ak.AK.main(AK.java:98)
+[100_SampleAgent] Props has automatic type conversion and other conveniences...
+(100_SampleAgent) test_value   = 84
+(100_SampleAgent) test_value   = 85 ($3835)
+(100_SampleAgent) test_message = This is a test message. This was appended.
+[000_AgentKernel] Started 100_SampleAgent
+[000_AgentKernel] Started 001_StartupAgent
+[000_AgentKernel] Started 000_AgentKernel
+J:\ak\demos\sample_agent>		                                               </PRE>
+		</FONT></TD></TR>
+		</TBODY></TABLE>
+<P>
+	
+</BLOCKQUOTE>
+
+
+<A NAME='Agent LifeCycle'><H3>Agent LifeCycle</H3></A>
+
+<BLOCKQUOTE>
+		The primary function of the agent kernel is to manage the creation, starting, 
+		stopping, and destruction of agents. In short, it manages the agent 
+		lifecycle. In order for the agent kernel to do this, the <TT>AgentInterface</TT> 
+		declares four methods called <TT>initProps</TT>,<TT>start</TT>,<TT>stop</TT>, and
+		<TT>destroy</TT> respectively that all agents must implement. Typical 
+		implementations of these methods can be seen in <TT>SampleAgent</TT>, and each 
+		performs an important role in the orderly execution of agent applications.
+        <P>
+		By following the source code and resulting output from <TT>SampleAgent</TT>, 
+		you can see a very specific order of events taking place within the agent kernel: 
+		<OL>
+		  <LI>An instance of <TT>SampleAgent</TT> is created by the agent kernel
+		  based on its Props file.
+		  <LI>The <TT>initProps</TT> method of <TT>SampleAgent</TT> is called
+		  to initialize the Props values.
+		  <LI>The <TT>start</TT> method of <TT>SampleAgent</TT> is called, yielding 
+		  output from the agent.
+		  <LI>The <TT>start</TT> method of <TT>SampleAgent</TT> exits, and the agent kernel exits. 
+		</OL>
+		The <TT>initProps()</TT> method is called by the agent kernel when 
+		the agent is created, providing an opportunity to initialize any 
+		Props which were not specified in the agent Props file. This is 
+		typically done using the <TT>Props.setDefault()</TT> method as shown
+		in the agent code above. Using this method will only set the property
+		to the specified default value if it does not have a previous value 
+		assigned. Because agents are loaded from a Props file, some of the 
+		properties may already be set. 
+		<P>
+		The <TT>start()</TT> method is called by the agent kernel when the
+		agent is started. In addition to typical Java APIs that the agent might
+		use to do it's job, there are a set of convenience methods in
+		<TT>com.cometway.ak.Agent</TT> that can be used for reporting the 
+		agent's activity. The agent's Props are accessible through the protected
+		exposure of the <TT>props</TT> instance variable. The sample agent employs
+		the reporting methods and Props for the majority of its demonstration. 
+        <P>
+		The <TT>stop()</TT> method is called by the agent 
+		kernel as a request that the agent should be stopped. Since the agent
+		kernel itself doesn't attempt to manage the scope or mechanism by which 
+		the agent is operating, it is the agent's responsibility to receive and 
+		act upon this request. The <TT>stop()</TT> method is not required for 
+		most agent implementations.
+		<P>
+		The <TT>destroy</TT> method is called by the agent
+		kernel just before an agent is destroyed. It is provided in the rare 
+        circumstance that additional cleanup is necessary before the agent 
+		instance is disposed. The <TT>destroy</TT> method is not required for
+		most agent implementations.		
+</BLOCKQUOTE>
+
+<A NAME='Reporting Agent Activity'><H3>Reporting Agent Activity</H3></A>
+
+<BLOCKQUOTE>
+	The class <TT>com.cometway.ak.Agent</TT> provides six methods for reporting 
+	various types of activity:
+	<DL>
+	<DT><TT>public void println(String s);</TT>
+	<DD>This method is used to report significant agent activity. Typically, 
+	this would be used to indicate that the agent is doing its job. 
+	Output for an agent can be disabled by setting the <TT>hide_println</TT>
+	Props attribute to true before starting the agent. 
+
+	<DT><TT>public void debug(String s);</TT>
+	<DD>This method is used to report debugging activity. Use this method during
+	development and debugging to temporarily watch for certain types of output. 
+	Debugging output can be disabled for the agent by setting the <TT>hide_debug</TT>
+	Props attribute to true before starting it.
+
+	<DT><TT>public void warning(String s);</TT>
+	<DT><TT>public void warning(String s, Exception e);</TT>
+	<DD>These methods are for reporting questionable activity or situations which 
+	probably shouldn't happen, but won't cause a significant failure in operation. 
+	Like compiler warnings, users may or may not ignore this output. The method 
+	is overloaded with a form that accepts an Exception, which will attempt to 
+	print out a stack trace in additon to the warning message. Warning output can 
+	be disabled for an agent by setting the <TT>hide_warning</TT> Props attribute
+	to true before starting it.
+
+	<DT><TT>public void error(String s);</TT>
+	<DT><TT>public void error(String s, Exception e);</TT>
+	<DD>This method is used to report errors. This is used for reporting critical
+	errors in the agent's operation. Typically, errors indicate a failure to perform
+	adequately and will not be ignored. This method is overloaded with a form that
+	accepts an Exception, which will attempt to print out a stack trace in additon
+	to the warning message. Output can not be disabled for error messages.
+	</DL>
+</BLOCKQUOTE>
+
+
+<A NAME='Messing with Agent Props '><H3>Messing with Agent Props</H3></A>
+
+<BLOCKQUOTE>
+			There are just a few things to know about using agent Props:
+			<OL>
+			<LI>Props attributes can be set to any Object reference
+			<LI>Props attributes can be dereferenced as an Object
+			<LI>There are convenience methods for attribute setting and getting Java 
+			primitives and common types
+			</OL>
+			Each agent that subclasses <TT>com.cometway.ak.Agent</TT> has access to a
+			protected reference to its <TT>Props</TT> object through a <TT>props</TT>
+			instance variable. This returns the same reference as the agent's <TT>getProps()
+			</TT> method without the hassle of making a method call.
+			<P>
+			Using <TT>props</TT>, the agent's attributes can be examined and/or 
+			modified as shown in the <TT>SampleAgent</TT> code above.  It is important
+			to note that it is preferable to use the convenience method <TT>getString()</TT>
+			as opposed to using something like <TT>String s = (String) props.getProperty()
+			</TT> as the latter circumvents the built-in type conversion Props offers. Using 
+			Props, it is possible to use <TT>setDefault</TT> to initialize a property as 
+			a <TT>String</TT>, use <TT>getInteger</TT> to retrieve its integer value, and
+			later use <TT>setLong</TT> to store it back as a long value. Props will do it's
+			best to make these conversions happen as expected. To avoid type conversion, just 
+			use the <TT>setProperty</TT> and <TT>getProperty</TT> methods directly.
+</BLOCKQUOTE>
+
+
+
+<A NAME='Additional Resources'><H3>Additional Resources</H3></A>
+<BLOCKQUOTE>
+	<UL>
+		<LI><A HREF='helloworldagent.html'>HelloWorld Agent</A>
+		<LI><A HREF='..\..\demos\index.html'>Complete List of Demos</A>
+</BLOCKQUOTE>
+
+</BLOCKQUOTE>
+
+
+<HR>
+
+<TABLE WIDTH='100%'><TR>
+<TD VALIGN='TOP'>
+<FONT SIZE='-1'>
+Copyright &copy; 1999-2002, Comet Way, Inc.<BR>
+</FONT>
+</TD>
+<TD ALIGN='RIGHT'><A HREF='http://www.cometway.com'><IMG SRC='cometway140.gif' BORDER='0'><A/></TD>
+</TR></TABLE>
+
+</BODY>
+</HTML>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

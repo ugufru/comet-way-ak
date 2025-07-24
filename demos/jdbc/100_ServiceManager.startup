@@ -1,0 +1,5 @@
+agent_id=100
+classname=com.cometway.ak.ServiceManager
+hide_debug=false
+hide_println=false
+name=ServiceManager

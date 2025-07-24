@@ -1,0 +1,14 @@
+## These jdbc parameters work with the odbc
+## driver included with the J2SE SDK.
+
+agent_id=400
+classname=com.cometway.jdbc.JDBCAgent
+hide_debug=false
+hide_println=false
+hide_warning=false
+jdbc_driver=sun.jdbc.odbc.JdbcOdbcDriver
+jdbc_url=jdbc:odbc:[dbname]
+jdbc_user=username
+jdbc_password=password
+name=JDBCAgent
+service_name=jdbc_agent

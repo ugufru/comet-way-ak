@@ -10,6 +10,8 @@ import com.cometway.util.*;
 import com.cometway.net.*;
 import com.cometway.io.RegExpFilenameFilter;
 
+import java.net.SocketException;
+
 /**
 * This agent is used by the WebServer to handle requests for HTML files and
 * other static documents from the file system.
@@ -43,6 +45,9 @@ public class HTTPFileServerAgent extends WebServerExtension
 		setDefault("dont_index_list","^\\.$,~\\.\\.$,^#[A-Za-z0-9\\.]*#$,^[A-Za-z0-9\\.]*~$");
 		// This alpha sorts the directory listings if set to true
 		setDefault("alpha_sort_index","true");
+
+		setDefault("mime_typer","mime_typer");
+		setDefault("socket_exception_warnings","true");
 	}
 	
 	/**
@@ -273,7 +278,7 @@ public class HTTPFileServerAgent extends WebServerExtension
 						}
 						else if(file.exists()) {
 							Date modDate = request.getIfModifiedSince();
-							if(modDate!=null && file.lastModified() < modDate.getTime()) {
+							if(modDate!=null && file.lastModified() <= modDate.getTime()) {
 								socketOut.write(WebServer.getHTMLByCode(WebServer.NOT_MODIFIED,request.getString(ConnectionKMethod.KEEP_ALIVE_FIELD)).getBytes());
 								request.setProperty(ConnectionKMethod.KEEP_ALIVE,"true");
 								socketOut.flush();
@@ -281,11 +286,14 @@ public class HTTPFileServerAgent extends WebServerExtension
 								request.returnVal = ""+WebServer.NOT_MODIFIED;
 							}
 							else {
-								FileInputStream fis = null;
+								BufferedInputStream fis = null;
 								try {
+									fis = new BufferedInputStream(new FileInputStream(file));
+
 									socketOut.write(("HTTP/1.1 200 Ok.\r\n").getBytes());						
 									socketOut.write(("Date: "+WebServer.dateFormat_RFC822.format(new Date())+"\r\n").getBytes());
 									socketOut.write(("Content-Length: "+file.length()+"\r\n").getBytes());
+									socketOut.write(("Last-Modified: "+WebServer.dateFormat_RFC822.format(new Date(file.lastModified()))+"\r\n").getBytes());
 									if(keepAlive) {
 										if(request.hasProperty(ConnectionKMethod.KEEP_ALIVE_FIELD)) {
 											socketOut.write((request.getString(ConnectionKMethod.KEEP_ALIVE_FIELD)+"\r\n").getBytes());
@@ -296,13 +304,21 @@ public class HTTPFileServerAgent extends WebServerExtension
 									else {
 										socketOut.write(("Connection: Close\r\n").getBytes());
 									}
-									socketOut.write((WebServer.getMimeType(path)+"\r\n").getBytes());
+									socketOut.write((getFileMimeType(fis,path)+"\r\n").getBytes());
 									socketOut.flush();
 									responded = true;
 									request.returnVal = "200";
 								
 									if(!request.isHeadRequest()) {
-										sendFile(file,request);
+										sendFile(fis,request);
+									}
+								}
+								catch(SocketException se) {
+									if(getBoolean("socket_exception_warnings")) {
+										warning("Could not read file or send file data to client, URI= "+path,se);
+									}
+									else {
+										error("Could not read file or send file data to client, URI= "+path,se);
 									}
 								}
 								catch(Exception e) {
@@ -365,9 +381,30 @@ public class HTTPFileServerAgent extends WebServerExtension
 	}
 
 
-	protected void sendFile(File file, HTTPAgentRequest request) throws IOException
+	protected String getFileMimeType(InputStream fis, String path)
 	{
-		FileInputStream fis = new FileInputStream(file);
+		String rval = WebServer.getMimeType(path);
+
+		// The WebServer's mime mappings overwrite the global ones, 
+		if(!WebServer.hasMimeType(path)) {
+			try {
+				BinaryMimeTyperInterface typer = (BinaryMimeTyperInterface)ServiceManager.getService(getString("mime_typer"));
+				rval = typer.getMimeType(fis);
+				//				System.out.println("Got Type: "+rval);
+				rval = "Content-Type: " + rval + "\r\n";
+			}
+			catch(Exception e) {;}
+		}
+		//		else {
+			//			System.out.println("Default Type: "+rval);
+		//		}
+
+		return(rval);
+	}
+
+
+	protected void sendFile(InputStream fis, HTTPAgentRequest request) throws IOException
+	{
 		OutputStream socketOut = request.getOutputStream();
 		byte[] fileData = new byte[1024];
 		int bytesread = fis.read(fileData);

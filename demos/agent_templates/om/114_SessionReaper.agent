@@ -1,0 +1,7 @@
+agent_id=114
+classname=com.cometway.om.SessionReaper
+name=SessionReaper
+om_service_name=object_manager
+schedule=between 0:0:0-23:59:59 every 5m
+session_timeout_ms=30000
+session_type=session

@@ -1,0 +1,9 @@
+agent_id=500
+classname=com.cometway.tools.CRLFConversionAgent
+hide_debug=false
+hide_println=false
+hide_warning=false
+name=CRLFConversionAgent
+output_format=system
+recursive=true
+scan_dir=./

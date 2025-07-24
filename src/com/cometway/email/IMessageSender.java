@@ -13,7 +13,7 @@ public interface IMessageSender
 
 	/**
 	* sendMessage is a method that sends a given IMessage
-	* @returns true if the IMessage was successfully 'sent', false otherwise
+	* @return true if the IMessage was successfully 'sent', false otherwise
 	*/
 
 	public boolean sendMessage(IMessage m);

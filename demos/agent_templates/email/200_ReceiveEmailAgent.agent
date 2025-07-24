@@ -1,0 +1,8 @@
+agent_id=200
+bind_port=25
+classname=com.cometway.email.ReceiveEmailAgent
+hide_debug=false
+hide_println=false
+hide_warning=false
+max_connections=5
+name=ReceiveEmailAgent
